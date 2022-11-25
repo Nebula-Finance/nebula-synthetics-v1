@@ -6,18 +6,24 @@ dotenv.config();
 function toEther(n: number) {
   return ethers.utils.parseUnits(n.toString(), "ether");
 }
-function fromEther(n: number) {
+function fromEther(n: any) {
   return ethers.utils.formatEther(n.toString());
 }
 
 describe("NGI", function () {
-  let ngi: GenesisIndex, usdc: any, weth: any, wbtc: any, accounts: any;
-  //printLogo()
+  let ngi: GenesisIndex,
+    usdc: any,
+    weth: any,
+    wbtc: any,
+    accounts: any,
+    wmatic: any;
+
   console.log("**POLYGON MAINNET FORK TESTING**");
   beforeEach(async () => {
     const USDC = "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174";
     const WBTC = "0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6";
     const WETH = "0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619";
+    const WMATIC = "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270";
     accounts = await ethers.getSigners();
     const NGI = await ethers.getContractFactory("GenesisIndex");
     ngi = await NGI.deploy([`${accounts[0].address}`]);
@@ -25,127 +31,46 @@ describe("NGI", function () {
     usdc = await ethers.getContractAt("IERC20", USDC);
     weth = await ethers.getContractAt("IWETH", WETH);
     wbtc = await ethers.getContractAt("IERC20", WBTC);
+    wmatic = await ethers.getContractAt("IWETH", WMATIC);
   });
 
-  it("Should give correct virtual price", async function () {
-    const virtualPrice = await ngi.getVirtualPrice();
-    expect(virtualPrice).to.be.greaterThan(0);
-    console.log("VIRTUAL PRICE: ", fromEther(virtualPrice), "$");
-  });
-
-  it("Should deposit using usdc", async function () {
-    // Get weth
-    const tx = await weth.deposit({ value: toEther(100) });
-    await tx.wait(1);
-    const balance = await weth.balanceOf(accounts[0].address);
-    expect(balance).to.be.greaterThan(0);
-
-    // Swap for usdc
-    const approval = await weth.approve(ngi.address, toEther(100));
-    await approval.wait(1);
-    const swap = await ngi.swap("2", "0", toEther(100));
-    await swap.wait();
-    const usdcBalance = await usdc.balanceOf(accounts[0].address);
-    expect(usdcBalance).to.be.greaterThan(0);
-
-    //Perform the deposit
-    console.log(
-      `DEPOSITTING ${(
-        usdcBalance /
-        10 ** 6
-      ).toString()}  usdc IN NGI WITHOUT OPTIMIZER...`
-    );
-    const approve = await usdc.approve(ngi.address, usdcBalance.toString());
-    await approve.wait();
-
-    const deposit = await ngi.deposit(0, usdcBalance.toString(), "0", false, {
-      gasLimit: 30000000,
+  describe("Price", () => {
+    it("Should return correct virtual price", async () => {
+      const res = await ngi.getVirtualPrice();
+      console.log(`${(res / 1e18).toString()} $ `);
     });
-    await deposit.wait();
-
-    // CHECK BALANCE
-    const ngiBalance = await ngi.balanceOf(accounts[0].address);
-    expect(ngiBalance).to.be.greaterThan(0);
-    console.log("NGI GOT WITHOUT OPTIMIZER : ", fromEther(ngiBalance));
   });
 
-  it("Should deposit using usdc and optimizer", async () => {
-    // Get weth
-    const tx = await weth.deposit({ value: toEther(100) });
-    await tx.wait(1);
-    const balance = await weth.balanceOf(accounts[0].address);
-    expect(balance).to.be.greaterThan(0);
-
-    // Swap for usdc
-    const approval = await weth.approve(ngi.address, toEther(100));
-    await approval.wait(1);
-    const swap = await ngi.swap("2", "0", toEther(100));
-    await swap.wait();
-    const usdcBalance = await usdc.balanceOf(accounts[0].address);
-    expect(usdcBalance).to.be.greaterThan(0);
-
-    //Perform the deposit
-    console.log(
-      `DEPOSITTING ${(
-        usdcBalance /
-        10 ** 6
-      ).toString()} usdc IN NGI WITH OPTIMIZER...`
-    );
-    const approve = await usdc.approve(ngi.address, usdcBalance.toString());
-    await approve.wait();
-
-    const deposit = await ngi.deposit(0, usdcBalance.toString(), "1", false, {
-      gasLimit: 30000000,
+  describe("Default Deposits", () => {
+    beforeEach(async () => {
+      await wmatic.deposit({ value: toEther(100) });
+      await wmatic.approve(ngi.address, toEther(100));
     });
-    await deposit.wait();
 
-    // CHECK BALANCE
-    const nigiBalancete = await ngi.balanceOf(accounts[0].address);
-    expect(nigiBalancete).to.be.greaterThan(0);
-    console.log("NGI GOT WITH OPTIMIZER : ", fromEther(nigiBalancete));
+    it("Optimizer 0", async () => {
+      await ngi.test_uni(wmatic.address, "0", toEther(100));
+      const usdcBalance = await usdc.balanceOf(accounts[0].address);
+      expect(usdcBalance).to.be.greaterThan(0);
+
+      await usdc.approve(ngi.address, usdcBalance);
+      await ngi.deposit("0", usdcBalance, "1");
+      const nigBalance = await ngi.balanceOf(accounts[0].address);
+      console.log(`Deposited : ${(usdcBalance / 1e6).toString()} USDC 
+      \nGot : ${fromEther(nigBalance)} NGI`);
+    });
+
+    it("Optimizer 1", async () => {
+      await ngi.test_uni(wmatic.address, "0", toEther(100));
+      const usdcBalance = await usdc.balanceOf(accounts[0].address);
+      expect(usdcBalance).to.be.greaterThan(0);
+
+      await usdc.approve(ngi.address, usdcBalance);
+      await ngi.deposit("0", usdcBalance, "2");
+      const nigBalance = await ngi.balanceOf(accounts[0].address);
+      console.log(`Deposited : ${(usdcBalance / 1e6).toString()} USDC 
+      \nGot : ${fromEther(nigBalance)} NGI`);
+    });
   });
-
-  /* t("Should be able to buy NGI with wEth only", async function(){
-      const tx = await weth.deposit({value: toEther(1)})
-      await tx.wait(1)
-      const balance = await weth.balanceOf(accounts[0].address)
-      expect(balance).to.be.greaterThan(0)
-      await (await weth.approve(ngi.address, balance.toString())).wait()
-      console.log(`Depositing ${fromEther(balance)} wETH in NGI...`)
-      const withEth = await ngi.deposit('2', balance.toString(), '1', false)
-      await withEth.wait()
-      const ngiBalance = await ngi.balanceOf(accounts[0].address)
-      console.log(`NGI GOT WITH ONLY WETH AND OPTIMIZER:${fromEther(ngiBalance)}`)
-      expect(ngiBalance).to.be.greaterThan(0)
-     
-    })
-
-    it("Should be able to buy NGI with wBtc only", async function(){
-      console.log("Previous balance", fromEther(await ngi.balanceOf(accounts[0].address)))
-      const tx = await weth.deposit({value: toEther(1)})
-      await tx.wait(1)
-      const balance = await weth.balanceOf(accounts[0].address)
-      await (await weth.approve(ngi.address, balance.toString())).wait()
-      await (await ngi.swap('2','1', balance.toString() )).wait()
-      const btcBalance = await wbtc.balanceOf(accounts[0].address)
-      console.log(`Depositing ${fromEther(btcBalance * (10**10))} wBtc in NGI...`)
-      await (await wbtc.approve(ngi.address, btcBalance)).wait()
-      const withBtc = await ngi.deposit('1', btcBalance.toString(), '1', false)
-      await withBtc.wait()
-      const ngiBalance = await ngi.balanceOf(accounts[0].address)
-      console.log(`NGI GOT WITH ONLY WBTC AND OPTIMIZER:${fromEther(ngiBalance)}`)
-      expect(ngiBalance).to.be.greaterThan(0)
-     
-    }) */
-
-  /*  it("Should be able to buy NGI with pure Eth only", async function(){
-      const withEth = await ngi.deposit('2', toEther(1), false, true, {value: toEther(1)})
-      await withEth.wait()
-      const ngiBalance = await ngi.balanceOf(accounts[0].address)
-      console.log(fromEther(ngiBalance))
-      expect(ngiBalance).to.be.greaterThan(0)
-     
-    }) */
 });
 
 /**

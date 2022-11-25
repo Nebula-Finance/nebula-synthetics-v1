@@ -14,7 +14,7 @@ const config: HardhatUserConfig = {
     noColors: true,
     currency: "USD",
     coinmarketcap: CMCAP_KEY,
-    token: "ETH",
+    token: "MATIC",
   },
   solidity: {
     version: "0.8.7",

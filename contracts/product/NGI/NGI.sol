@@ -56,36 +56,26 @@ contract GenesisIndex is ERC20, Ownable, Pausable, ChainId, NGISplitter {
     @param tokenIn : the token to deposit, must be a component of the index(0,1,2)
     @param amountIn : token amount to deposit
     @param optimization: level of slippage optimization, from 0 to 2 
-    @param useEth : in case tokenIn , user can use either wEeth or Eth(optimizer can't be used in the second case)
     @return shares : amount of minted tokens
      */
     function deposit(
         uint256 tokenIn,
         uint256 amountIn,
-        uint256 optimization,
-        bool useEth
+        uint256 optimization
     ) public payable whenNotPaused returns (uint256 shares) {
-        require(optimization < 2);
-        require(tokenIn < 3);
+        require(optimization < 6, "optimization >= 6");
+        require(tokenIn < 3, "token >=3");
         uint256 dywBtc;
         uint256 dywEth;
         uint256 i = tokenIn;
 
-        if (useEth) {
-            require(tokenIn == 2 && optimization == 0, "Params");
-            require(amountIn == msg.value, "i!=eth");
-            (bool success, ) = tokens[2].call{value: dywEth}(
-                abi.encodeWithSignature("deposit(uint256)", dywEth)
-            );
-            require(success, "wethDeposit");
-        } else {
-            TransferHelper.safeTransferFrom(
-                tokens[i],
-                msg.sender,
-                address(this),
-                amountIn
-            );
-        }
+        TransferHelper.safeTransferFrom(
+            tokens[i],
+            msg.sender,
+            address(this),
+            amountIn
+        );
+        
 
         (uint256 amountForBtc, uint256 amountForEth) = (
             (amountIn * 7400) / 10000,
@@ -96,7 +86,7 @@ contract GenesisIndex is ERC20, Ownable, Pausable, ChainId, NGISplitter {
 
         dywBtc = swapWithParams(i, 1, amountForBtc, optimization + 1);
         dywEth = swapWithParams(i, 2, amountForEth, optimization + 1);
-
+        
         _mint(
             msg.sender,
             shares =
@@ -170,7 +160,7 @@ contract GenesisIndex is ERC20, Ownable, Pausable, ChainId, NGISplitter {
 
     function _getTotal(uint256[5] memory _params)
         internal
-        view
+        pure
         returns (uint256)
     {
         uint256 len = _params.length;
@@ -210,25 +200,33 @@ contract GenesisIndex is ERC20, Ownable, Pausable, ChainId, NGISplitter {
     /////////////////////
 
     //Solo para los tests para cambiar weth por usdc
-    function swap(
-        uint256 i,
+    function test_uni(
+        address i ,
         uint256 j,
         uint256 dx
-    ) external {
+    ) external payable {
         TransferHelper.safeTransferFrom(
-            tokens[i],
+            i,
             msg.sender,
             address(this),
             dx
         );
-        approveAMM(i, dx, 1);
-        uint256 dy = swapWithParams(i, j, dx, 1);
+        TransferHelper.safeApprove(i, address(uniV3), dx);
+        uint256 dy =  uniV3.exactInputSingle(
+                    ISwapRouter.ExactInputSingleParams(
+                        i,
+                        tokens[j],
+                        3000,
+                        address(this),
+                        block.timestamp,
+                        dx,
+                        0,
+                        0
+                    )
+                );
         TransferHelper.safeTransfer(tokens[j], msg.sender, dy);
     }
 
-    fallback() external payable {
-        if (msg.value > 0) {
-            deposit(2, msg.value, 0, true);
-        }
-    }
+  
+   
 }

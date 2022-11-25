@@ -23,20 +23,21 @@ contract NGISplitter is PriceConsumerNGI {
     ICurvePool constant crv = 
         ICurvePool(0x3FCD5De6A9fC8A99995c406c77DDa3eD7E406f81); // CURVE pool
 
-    IVaultBalancer constant bal =
-        IVaultBalancer(0xBA12222222228d8Ba445958a75a0704d566BF2C8); // BALANCER router
-
     ISwapRouter constant uniV3 =
         ISwapRouter(0xE592427A0AEce92De3Edee1F18E0157C05861564); // UNISWAPv3 router
 
     IUniswapV2Router02 constant uniV2 = 
         IUniswapV2Router02(0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff); //UNISWAPv2 router
 
-    IUniswapV2Router02 constant quick = 
-        IUniswapV2Router02(0xFCB5348111665Cf95a777f0c4FCA768E05601760); //UNISWAPv2 router
+    IVaultBalancer constant bal =
+        IVaultBalancer(0xBA12222222228d8Ba445958a75a0704d566BF2C8); // BALANCER router
 
     IUniswapV2Router02 constant sushi = 
         IUniswapV2Router02(0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506) ;//SUSHISWAP router
+
+    IUniswapV2Router02 constant quick = 
+        IUniswapV2Router02(0xFCB5348111665Cf95a777f0c4FCA768E05601760); //UNISWAPv2 router
+
     constructor() {
         addressRouting[0] = address(crv);
         addressRouting[1] = address(uniV3);
@@ -59,33 +60,33 @@ contract NGISplitter is PriceConsumerNGI {
             return _swapCrv(i, j, dx);
         }
         if (split == 2) {
-            return _swapCrv(i, j, dx) 
-            + _swapUniV3(_in, _out, dx);
+            return _swapCrv(i, j, dx / 2) 
+            + _swapUniV3(_in, _out, dx / 2);
         }
         if (split == 3) {
-            return _swapCrv(i, j, dx) 
-            + _swapUniV3(_in, _out, dx / 2) 
-            + _swapUniV2(_in, _out, dx / 2);
+            return _swapCrv(i, j, dx / 3) 
+            + _swapUniV3(_in, _out, dx / 3) 
+            + _swapUniV2(_in, _out, dx / 3);
         }
         if (split == 4) {
-            return _swapCrv(i, j, dx) 
-            + _swapUniV3(_in, _out,dx / 3) 
-            + _swapUniV2(_in, _out, dx / 3) 
-            + _swapBal(_in, _out, dx / 3);
+            return _swapCrv(i, j, dx / 4)  
+            + _swapUniV3(_in, _out,dx / 4) 
+            + _swapUniV2(_in, _out, dx / 4) 
+            + _swapBal(_in, _out, dx / 4);
         }
         if (split == 5) {
-            return _swapCrv(i, j, dx) 
-            + _swapUniV3(_in, _out, dx / 4) 
-            + _swapUniV2(_in, _out, dx / 4) 
-            + _swapBal(_in, _out, dx / 4) 
-            + _swapSushi(_in, _out, dx / 4);
+            return _swapCrv(i, j, dx / 5) 
+            + _swapUniV3(_in, _out, dx / 5) 
+            + _swapUniV2(_in, _out, dx / 5) 
+            + _swapBal(_in, _out, dx / 5) 
+            + _swapSushi(_in, _out, dx / 5);
         }
-        return _swapCrv(i, j, dx) 
-        + _swapUniV3(_in, _out, dx / 5) 
-        + _swapUniV2(_in, _out, dx / 5) 
-        + _swapBal(_in, _out, dx / 5) 
-        + _swapSushi(_in, _out, dx / 5) 
-        + _swapQuick(_in, _out , dx / 5);
+        return _swapCrv(i, j, dx / 6) 
+        + _swapUniV3(_in, _out, dx / 6) 
+        + _swapUniV2(_in, _out, dx / 6) 
+        + _swapBal(_in, _out, dx / 6) 
+        + _swapSushi(_in, _out, dx / 6) 
+        + _swapQuick(_in, _out , dx / 6);
     }
 
     function swapWithCustomParams(uint256 _i, uint256[5] memory _splits)
@@ -112,9 +113,22 @@ contract NGISplitter is PriceConsumerNGI {
         uint256 _j,
         uint256 _dx
     )internal returns(uint256){
-        (uint256 iAdjusted, uint256 jAdjusted) = (_i == 0 ? 1 : _i== 1 ? 3 : 4, _j == 0 ? 1 : _j== 1 ? 3 : 4 );
-        uint256 dy = crv.get_dy_underlying(iAdjusted, jAdjusted, _dx);
-        crv.exchange_underlying(iAdjusted, jAdjusted, _dx, 0);
+        if(_dx == 0 ){
+            return 0;
+        }
+        if(_i == _j){
+            return _dx;
+        }
+        uint256 iUnderlying = _i == 0 ? 1 
+            : _i == 1 ? 3
+            : 4;
+        uint256 jUnderlying = _j == 0 ? 1 
+            : _j == 1 ? 3
+            : 4;
+        uint256 dy = crv.get_dy_underlying(iUnderlying, jUnderlying, _dx);
+        crv.exchange_underlying(_i, _j, _dx, dy, address(this));
+        return dy;
+        
     }
 
     // funcion para hacer swap usando uniswap
