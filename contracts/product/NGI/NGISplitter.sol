@@ -16,9 +16,9 @@ contract NGISplitter is PriceConsumerNGI {
         0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6, //[1] => wBTC
         0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619 // [2] => wETH
     ];
-
     uint40[3] multipliers = [1e12, 1e10, 1];
     uint16[3] marketCapWeigth = [0, 7400, 2600];
+
 
     ICurvePool constant crv = 
         ICurvePool(0x3FCD5De6A9fC8A99995c406c77DDa3eD7E406f81); // CURVE pool
@@ -89,11 +89,20 @@ contract NGISplitter is PriceConsumerNGI {
         + _swapQuick(_in, _out , dx / 6);
     }
 
-    function swapWithCustomParams(uint256 _i, uint256[5] memory _splits)
+    function swapWithParamsCustom(uint256 _i, uint256 _j,  uint256[6] memory _splits)
         internal
-        returns (uint256, uint256)
+        returns (uint256)
     {
-        return (2,2);
+        address _in = tokens[_i];
+        address _out = tokens[_j];
+
+        return _swapCrv(_i, _j, _splits[0]) 
+        + _swapUniV3(_in, _out, _splits[1]) 
+        + _swapUniV2(_in, _out, _splits[2]) 
+        + _swapBal(_in, _out, _splits[3]) 
+        + _swapSushi(_in, _out, _splits[4]) 
+        + _swapQuick(_in, _out , _splits[5]);
+        
     }
 
     function approveAMM(
@@ -103,11 +112,14 @@ contract NGISplitter is PriceConsumerNGI {
     ) internal {
         uint256 s = _split;
         address token = tokens[_token];
-        for (uint256 i = 0; i < s; i++) {
+        for (uint256 i = 0; i < s;) {
             TransferHelper.safeApprove(token, addressRouting[i], _amount);
+            unchecked {
+                ++i;
+            }
         }
     }
-
+    // swap on curve
     function _swapCrv(
         uint256 _i,
         uint256 _j,
@@ -126,12 +138,12 @@ contract NGISplitter is PriceConsumerNGI {
             : _j == 1 ? 3
             : 4;
         uint256 dy = crv.get_dy_underlying(iUnderlying, jUnderlying, _dx);
-        crv.exchange_underlying(_i, _j, _dx, dy, address(this));
+        crv.exchange_underlying(_i, _j, _dx, dy);
         return dy;
         
     }
 
-    // funcion para hacer swap usando uniswap
+    // swap oin uniswapv3
     function _swapUniV3(
         address _i,
         address _j,
@@ -153,7 +165,7 @@ contract NGISplitter is PriceConsumerNGI {
                     )
                 );
     }
-
+    //swap on uniswapv2
     function _swapUniV2(
         address _i,
         address _j,
@@ -166,8 +178,9 @@ contract NGISplitter is PriceConsumerNGI {
          _dx == 0 ? 0 
         : route[0] == route[1] ? _dx
         : uniV2.swapExactTokensForTokens(_dx,0, route , address(this), block.timestamp)[0];
-    }
+    }   
 
+    //swap on quickswap
     function _swapQuick(
         address _i,
         address _j,
@@ -198,7 +211,7 @@ contract NGISplitter is PriceConsumerNGI {
 
 
 
-    // funcion para hacer swap usando balancer
+    // swap on balancer
     function _swapBal(
         address _i,
         address _j,
@@ -211,7 +224,7 @@ contract NGISplitter is PriceConsumerNGI {
             return 0;
         }
         IVaultBalancer.SingleSwap memory params = IVaultBalancer.SingleSwap({
-            poolId: 0xbd3a698826d27563d08d459faff2d5f6960e21cf0001000000000000000003b5,
+            poolId: 0x03cd191f589d12b0582a99808cf19851e468e6b500010000000000000000000a,
             kind: IVaultBalancer.SwapKind.GIVEN_IN,
             assetIn: IAsset(_i),
             assetOut: IAsset(_j),
@@ -225,8 +238,6 @@ contract NGISplitter is PriceConsumerNGI {
                 recipient: payable(address(this)),
                 toInternalBalance: false
             });
-        uint256 dyExpected = 0; 
-
         return bal.swap(params, funds, 0, block.timestamp);
     }
 

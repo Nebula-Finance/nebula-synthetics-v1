@@ -1,6 +1,7 @@
 import { ethers } from "hardhat";
 import { expect } from "chai";
 import * as dotenv from "dotenv";
+import { ICurvePool, IERC20, IWETH, GenesisIndex } from "../typechain-types";
 dotenv.config();
 
 function toEther(n: number) {
@@ -12,11 +13,12 @@ function fromEther(n: any) {
 
 describe("NGI", function () {
   let ngi: GenesisIndex,
-    usdc: any,
-    weth: any,
-    wbtc: any,
+    usdc: IERC20,
+    weth: IERC20,
+    wbtc: IERC20,
     accounts: any,
-    wmatic: any;
+    crv: ICurvePool,
+    wmatic: IWETH;
 
   console.log("**POLYGON MAINNET FORK TESTING**");
   beforeEach(async () => {
@@ -24,24 +26,38 @@ describe("NGI", function () {
     const WBTC = "0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6";
     const WETH = "0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619";
     const WMATIC = "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270";
+    const CRV = "0x3FCD5De6A9fC8A99995c406c77DDa3eD7E406f81";
     accounts = await ethers.getSigners();
     const NGI = await ethers.getContractFactory("GenesisIndex");
-    ngi = await NGI.deploy([`${accounts[0].address}`]);
+    ngi = await NGI.deploy();
     await ngi.deployed();
     usdc = await ethers.getContractAt("IERC20", USDC);
     weth = await ethers.getContractAt("IWETH", WETH);
     wbtc = await ethers.getContractAt("IERC20", WBTC);
+    crv = await ethers.getContractAt("ICurvePool", CRV);
     wmatic = await ethers.getContractAt("IWETH", WMATIC);
+  });
+
+  describe("Curve pool test", () => {
+    it("Curve TRICRYPTO should work", async () => {
+      await wmatic.deposit({ value: toEther(100) });
+      await wmatic.approve(ngi.address, toEther(100));
+      await ngi.test_uni(wmatic.address, "0", toEther(100));
+      const usdcBalance: any = await usdc.balanceOf(accounts[0].address);
+      expect(usdcBalance).to.be.greaterThan(0);
+      await usdc.approve(crv.address, "1000");
+      await crv.exchange_underlying("1", "3", "1000", "0");
+    });
   });
 
   describe("Price", () => {
     it("Should return correct virtual price", async () => {
-      const res = await ngi.getVirtualPrice();
+      const res: any = await ngi.getVirtualPrice();
       console.log(`${(res / 1e18).toString()} $ `);
     });
   });
 
-  describe("Default Deposits", () => {
+  /* describe("Default Deposits", () => {
     beforeEach(async () => {
       await wmatic.deposit({ value: toEther(100) });
       await wmatic.approve(ngi.address, toEther(100));
@@ -49,28 +65,28 @@ describe("NGI", function () {
 
     it("Optimizer 0", async () => {
       await ngi.test_uni(wmatic.address, "0", toEther(100));
-      const usdcBalance = await usdc.balanceOf(accounts[0].address);
+      const usdcBalance: any = await usdc.balanceOf(accounts[0].address);
       expect(usdcBalance).to.be.greaterThan(0);
 
       await usdc.approve(ngi.address, usdcBalance);
       await ngi.deposit("0", usdcBalance, "1");
-      const nigBalance = await ngi.balanceOf(accounts[0].address);
+      const nigBalance: any = await ngi.balanceOf(accounts[0].address);
       console.log(`Deposited : ${(usdcBalance / 1e6).toString()} USDC 
       \nGot : ${fromEther(nigBalance)} NGI`);
     });
 
     it("Optimizer 1", async () => {
       await ngi.test_uni(wmatic.address, "0", toEther(100));
-      const usdcBalance = await usdc.balanceOf(accounts[0].address);
+      const usdcBalance: any = await usdc.balanceOf(accounts[0].address);
       expect(usdcBalance).to.be.greaterThan(0);
 
       await usdc.approve(ngi.address, usdcBalance);
       await ngi.deposit("0", usdcBalance, "2");
-      const nigBalance = await ngi.balanceOf(accounts[0].address);
+      const nigBalance: any = await ngi.balanceOf(accounts[0].address);
       console.log(`Deposited : ${(usdcBalance / 1e6).toString()} USDC 
       \nGot : ${fromEther(nigBalance)} NGI`);
     });
-  });
+  }); */
 });
 
 /**
