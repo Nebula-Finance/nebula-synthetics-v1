@@ -26,9 +26,6 @@ contract NGISplitter is PriceConsumerNGI {
     ISwapRouter constant uniV3 =
         ISwapRouter(0xE592427A0AEce92De3Edee1F18E0157C05861564); // UNISWAPv3 router
 
-    IUniswapV2Router02 constant uniV2 = 
-        IUniswapV2Router02(0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff); //UNISWAPv2 router
-
     IVaultBalancer constant bal =
         IVaultBalancer(0xBA12222222228d8Ba445958a75a0704d566BF2C8); // BALANCER router
 
@@ -36,15 +33,14 @@ contract NGISplitter is PriceConsumerNGI {
         IUniswapV2Router02(0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506) ;//SUSHISWAP router
 
     IUniswapV2Router02 constant quick = 
-        IUniswapV2Router02(0xFCB5348111665Cf95a777f0c4FCA768E05601760); //UNISWAPv2 router
+        IUniswapV2Router02(0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff); //UNISWAPv2 router
 
     constructor() {
         addressRouting[0] = address(crv);
         addressRouting[1] = address(uniV3);
-        addressRouting[2] = address(uniV2);
-        addressRouting[3] = address(bal);
-        addressRouting[4] = address(sushi);
-        addressRouting[5] = address(quick);
+        addressRouting[2] = address(bal);
+        addressRouting[3] = address(sushi);
+        addressRouting[4] = address(quick);
     }
 
     function swapWithParams(
@@ -66,30 +62,24 @@ contract NGISplitter is PriceConsumerNGI {
         if (split == 3) {
             return _swapCrv(i, j, dx / 3) 
             + _swapUniV3(_in, _out, dx / 3) 
-            + _swapUniV2(_in, _out, dx / 3);
+            + _swapBal(_in, _out, dx / 3);
+            
         }
         if (split == 4) {
             return _swapCrv(i, j, dx / 4)  
             + _swapUniV3(_in, _out,dx / 4) 
-            + _swapUniV2(_in, _out, dx / 4) 
-            + _swapBal(_in, _out, dx / 4);
+            + _swapBal(_in, _out, dx / 4)
+            + _swapSushi(_in, _out, dx / 4);
         }
-        if (split == 5) {
-            return _swapCrv(i, j, dx / 5) 
-            + _swapUniV3(_in, _out, dx / 5) 
-            + _swapUniV2(_in, _out, dx / 5) 
-            + _swapBal(_in, _out, dx / 5) 
-            + _swapSushi(_in, _out, dx / 5);
-        }
-        return _swapCrv(i, j, dx / 6) 
-        + _swapUniV3(_in, _out, dx / 6) 
-        + _swapUniV2(_in, _out, dx / 6) 
-        + _swapBal(_in, _out, dx / 6) 
-        + _swapSushi(_in, _out, dx / 6) 
-        + _swapQuick(_in, _out , dx / 6);
+
+        return _swapCrv(i, j, dx / 5) 
+        + _swapUniV3(_in, _out, dx / 5) 
+        + _swapBal(_in, _out, dx / 5) 
+        + _swapSushi(_in, _out, dx / 5)
+        + _swapQuick(_in, _out , dx / 5);
     }
 
-    function swapWithParamsCustom(uint256 _i, uint256 _j,  uint256[6] memory _splits)
+    function swapWithParamsCustom(uint256 _i, uint256 _j,  uint256[5] memory _splits)
         internal
         returns (uint256)
     {
@@ -98,10 +88,9 @@ contract NGISplitter is PriceConsumerNGI {
 
         return _swapCrv(_i, _j, _splits[0]) 
         + _swapUniV3(_in, _out, _splits[1]) 
-        + _swapUniV2(_in, _out, _splits[2]) 
-        + _swapBal(_in, _out, _splits[3]) 
-        + _swapSushi(_in, _out, _splits[4]) 
-        + _swapQuick(_in, _out , _splits[5]);
+        + _swapBal(_in, _out, _splits[2]) 
+        + _swapSushi(_in, _out, _splits[3]) 
+        + _swapQuick(_in, _out , _splits[4]);
         
     }
 
@@ -131,14 +120,10 @@ contract NGISplitter is PriceConsumerNGI {
         if(_i == _j){
             return _dx;
         }
-        uint256 iUnderlying = _i == 0 ? 1 
-            : _i == 1 ? 3
-            : 4;
-        uint256 jUnderlying = _j == 0 ? 1 
-            : _j == 1 ? 3
-            : 4;
+        uint256 iUnderlying = _getUnderlying(_i);
+        uint256 jUnderlying = _getUnderlying(_j);
         uint256 dy = crv.get_dy_underlying(iUnderlying, jUnderlying, _dx);
-        crv.exchange_underlying(_i, _j, _dx, dy);
+        crv.exchange_underlying(iUnderlying, jUnderlying , _dx, 0);
         return dy;
         
     }
@@ -165,51 +150,6 @@ contract NGISplitter is PriceConsumerNGI {
                     )
                 );
     }
-    //swap on uniswapv2
-    function _swapUniV2(
-        address _i,
-        address _j,
-        uint256 _dx
-    ) internal returns (uint256){
-        address[] memory route = new address[](2);
-        route[0] = _i;
-        route[1] = _j;
-        return
-         _dx == 0 ? 0 
-        : route[0] == route[1] ? _dx
-        : uniV2.swapExactTokensForTokens(_dx,0, route , address(this), block.timestamp)[0];
-    }   
-
-    //swap on quickswap
-    function _swapQuick(
-        address _i,
-        address _j,
-        uint256 _dx
-    ) internal returns (uint256){
-        address[] memory route = new address[](2);
-        route[0] = _i;
-        route[1] = _j;
-       return
-         _dx == 0 ? 0 
-        : route[0] == route[1] ? _dx
-        : uniV2.swapExactTokensForTokens(_dx,0, route , address(this), block.timestamp)[0];
-    }
-
-    function _swapSushi(
-        address _i,
-        address _j,
-        uint256 _dx
-    ) internal returns (uint256){
-        address[] memory route = new address[](2);
-        route[0] = _i;
-        route[1] = _j;
-        return
-         _dx == 0 ? 0 
-        : route[0] == route[1] ? _dx
-        : uniV2.swapExactTokensForTokens(_dx,0, route , address(this), block.timestamp)[0];
-    }
-
-
 
     // swap on balancer
     function _swapBal(
@@ -242,6 +182,51 @@ contract NGISplitter is PriceConsumerNGI {
     }
 
 
+
+    function _swapSushi(
+        address _i,
+        address _j,
+        uint256 _dx
+    ) internal returns (uint256){
+        address[] memory route = new address[](2);
+        route[0] = _i;
+        route[1] = _j;
+        return
+         _dx == 0 ? 0 
+        : route[0] == route[1] ? _dx
+        : sushi.swapExactTokensForTokens(_dx,0, route , address(this), block.timestamp)[1];
+    }
+
+
+
+    //swap on quickswap
+    function _swapQuick(
+        address _i,
+        address _j,
+        uint256 _dx
+    ) internal returns (uint256){
+        address[] memory route = new address[](2);
+        route[0] = _i;
+        route[1] = _j;
+       return
+         _dx == 0 ? 0 
+        : route[0] == route[1] ? _dx
+        : sushi.swapExactTokensForTokens(_dx,0, route , address(this), block.timestamp)[1];
+    }
+
+    
+
+    function _getUnderlying(uint256 n) internal pure returns(uint256){
+        if(n==0){
+            return 1;
+        }
+        if(n==1){
+            return 3;
+        }
+        if(n==2){
+            return 4;
+        }
+    }
 
 
 }

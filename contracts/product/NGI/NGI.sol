@@ -5,6 +5,7 @@ Created by @Nebula.fi
 wBTC-wETH
  */
 
+import "hardhat/console.sol";
 pragma solidity ^0.8.7;
 import "../../utils/ChainId.sol";
 import "./NGISplitter.sol";
@@ -63,8 +64,7 @@ contract GenesisIndex is ERC20, Ownable, Pausable, ChainId, NGISplitter {
             (amountIn * 2600) / 10000
         );
 
-        approveAMM(i, amountForBtc + amountForEth, optimization + 1);
-
+        approveAMM(i, amountIn, optimization + 1);
         dywBtc = swapWithParams(i, 1, amountForBtc, optimization + 1);
         dywEth = swapWithParams(i, 2, amountForEth, optimization + 1);
         
@@ -85,7 +85,7 @@ contract GenesisIndex is ERC20, Ownable, Pausable, ChainId, NGISplitter {
      */
 
 
-    function depositCustom(uint256 tokenIn, uint256[6] memory splits)
+    function depositCustom(uint256 tokenIn, uint256[5] memory splits)
         external
         whenNotPaused
         returns (uint256 shares)
@@ -102,10 +102,10 @@ contract GenesisIndex is ERC20, Ownable, Pausable, ChainId, NGISplitter {
         );
         
         approveAMM(i, t, 5);
-        uint256[6] memory splitsForBtc;
-        uint256[6] memory splitsForEth;
+        uint256[5] memory splitsForBtc;
+        uint256[5] memory splitsForEth;
 
-        for(uint256 index=0; index<6;){
+        for(uint256 index=0; index<5;){
             splitsForBtc[index] = splits[index] * 7400/10000;
             splitsForEth[index] = splits[index] * 2600/10000;
             unchecked {
@@ -138,21 +138,22 @@ contract GenesisIndex is ERC20, Ownable, Pausable, ChainId, NGISplitter {
         whenNotPaused
         returns (uint256 usdcOut)
     {   
-        require(optimization < 6, "optimization >= 6");
+        require(optimization < 5, "optimization >= 5");
         _burn(msg.sender, ngiIn);
         uint256 usdcIn = getVirtualPrice() * ngiIn;
         uint256 wBtcIn = (usdcIn * 7400 / 10000) / getLatestPrice(1) /multipliers[1];
         uint256 wEthIn = (usdcIn * 2600 / 10000) / getLatestPrice(2) /multipliers[2];
-        TransferHelper.safeTransferFrom(
+        approveAMM(1, wBtcIn, optimization + 1);
+        approveAMM(2, wEthIn, optimization + 1);
+        TransferHelper.safeTransfer(
             tokens[0],
-            address(this),
             msg.sender,
             usdcOut = swapWithParams(1, 0, wBtcIn, optimization + 1) + swapWithParams(2, 0, wEthIn, optimization + 1)
         );
         emit Burn(msg.sender, usdcOut, ngiIn);
     }
 
-    function withdrawUsdcCustom(uint256 ngiIn, uint256[6] memory splitswBtc, uint256[6] memory splitswEth) 
+    function withdrawUsdcCustom(uint256 ngiIn, uint256[5] memory splitswBtc, uint256[5] memory splitswEth) 
         external 
         whenNotPaused 
         returns(uint256 usdcOut)
@@ -160,18 +161,19 @@ contract GenesisIndex is ERC20, Ownable, Pausable, ChainId, NGISplitter {
         uint256 usdcIn = getVirtualPrice() * ngiIn;
         uint256 wBtcIn = (usdcIn * 7400 / 10000) / getLatestPrice(1) /multipliers[1];
         uint256 wEthIn = (usdcIn * 2600 / 10000) / getLatestPrice(2) /multipliers[2];
-        require(_getTotal(splitswBtc) >= wBtcIn && _getTotal(splitswEth) >= wEthIn, "invalid amount");
+        require(_getTotal(splitswBtc) <= wBtcIn && _getTotal(splitswEth) <= wEthIn, "invalid amount");
         _burn(msg.sender, ngiIn);
-        TransferHelper.safeTransferFrom(
+        approveAMM(1, wBtcIn, 6);
+        approveAMM(1, wEthIn, 6);
+        TransferHelper.safeTransfer(
             tokens[0],
-            address(this),
             msg.sender,
             usdcOut = swapWithParamsCustom(1, 0, splitswBtc) + swapWithParamsCustom(2, 0, splitswEth)
         );
         emit Burn(msg.sender, usdcOut, ngiIn);
     }
 
-    function _getTotal(uint256[6] memory _params)
+    function _getTotal(uint256[5] memory _params)
         internal
         pure
         returns (uint256)
@@ -208,8 +210,96 @@ contract GenesisIndex is ERC20, Ownable, Pausable, ChainId, NGISplitter {
 
     /////////////////////
 
-    //Solo para los tests para cambiar weth por usdc
-    function test_uni(
+    //ONLY FOR TESTING
+    function test_uni_v3(
+        uint256 i ,
+        uint256 j,
+        uint256 dx
+    ) external {
+        TransferHelper.safeTransferFrom(
+            tokens[i],
+            msg.sender,
+            address(this),
+            dx
+        );
+        approveAMM(i, dx, 5);
+        uint256 dy = _swapUniV3(tokens[i], tokens[j], dx);
+        console.log(dy);
+        TransferHelper.safeTransfer(tokens[j], msg.sender, dy);
+    }
+
+  
+     function test_quick(
+        uint256 i ,
+        uint256 j,
+        uint256 dx
+    ) external {
+        TransferHelper.safeTransferFrom(
+            tokens[i],
+            msg.sender,
+            address(this),
+            dx
+        );
+        approveAMM(i, dx, 5);
+        uint256 dy = _swapQuick(tokens[i], tokens[j], dx);
+        console.log(dy);
+        TransferHelper.safeTransfer(tokens[j], msg.sender, dy);
+    }
+
+
+    function test_sushi(
+        uint256 i ,
+        uint256 j,
+        uint256 dx
+    ) external {
+        TransferHelper.safeTransferFrom(
+            tokens[i],
+            msg.sender,
+            address(this),
+            dx
+        );
+        approveAMM(i, dx, 5);
+        uint256 dy = _swapSushi(tokens[i], tokens[j], dx);
+        console.log(dy);
+        TransferHelper.safeTransfer(tokens[j], msg.sender,dy);
+    }
+
+    function test_balancer(
+        uint256 i ,
+        uint256 j,
+        uint256 dx
+    ) external {
+        TransferHelper.safeTransferFrom(
+            tokens[i],
+            msg.sender,
+            address(this),
+            dx
+        );
+        approveAMM(i, dx, 5);
+        uint256 dy = _swapBal(tokens[i], tokens[j], dx);
+        console.log(dy);
+        TransferHelper.safeTransfer(tokens[j], msg.sender, dy);
+    }
+
+
+    function test_curve(
+        uint256 i ,
+        uint256 j,
+        uint256 dx
+    ) external {
+        TransferHelper.safeTransferFrom(
+            tokens[i],
+            msg.sender,
+            address(this),
+            dx
+        );
+        approveAMM(i, dx, 5);
+        uint256 dy = _swapCrv(i, j, dx);
+        console.log(dy);
+        TransferHelper.safeTransfer(tokens[j], msg.sender, dy);
+    }
+
+    function test_swap(
         address i ,
         uint256 j,
         uint256 dx
@@ -235,6 +325,8 @@ contract GenesisIndex is ERC20, Ownable, Pausable, ChainId, NGISplitter {
                 );
         TransferHelper.safeTransfer(tokens[j], msg.sender, dy);
     }
+
+   
 
   
    

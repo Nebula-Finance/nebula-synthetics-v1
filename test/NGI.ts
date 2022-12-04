@@ -38,15 +38,34 @@ describe("NGI", function () {
     wmatic = await ethers.getContractAt("IWETH", WMATIC);
   });
 
-  describe("Curve pool test", () => {
-    it("Curve TRICRYPTO should work", async () => {
-      await wmatic.deposit({ value: toEther(100) });
-      await wmatic.approve(ngi.address, toEther(100));
-      await ngi.test_uni(wmatic.address, "0", toEther(100));
-      const usdcBalance: any = await usdc.balanceOf(accounts[0].address);
-      expect(usdcBalance).to.be.greaterThan(0);
-      await usdc.approve(crv.address, "1000");
-      await crv.exchange_underlying("1", "3", "1000", "0");
+  describe("Testing Pools", () => {
+    let usdcBalance: any;
+    beforeEach(async () => {
+      await wmatic.deposit({ value: toEther(0.1) });
+      await wmatic.approve(ngi.address, toEther(0.1));
+      await ngi.test_swap(wmatic.address, "0", toEther(0.1));
+      usdcBalance = await usdc.balanceOf(accounts[0].address);
+      await usdc.approve(ngi.address, usdcBalance);
+    });
+
+    it("UNISWAPv3 should work", async () => {
+      await ngi.test_uni_v3("0", "1", usdcBalance);
+    });
+
+    it("Balancer  should work", async () => {
+      await ngi.test_balancer("0", "1", usdcBalance);
+    });
+
+    it("Sushiswap should work", async () => {
+      await ngi.test_sushi("0", "1", usdcBalance);
+    });
+
+    it("Quickswap should work", async () => {
+      await ngi.test_quick("0", "1", usdcBalance);
+    });
+
+    it("Curve  should work", async () => {
+      await ngi.test_curve("0", "1", usdcBalance);
     });
   });
 
@@ -57,65 +76,175 @@ describe("NGI", function () {
     });
   });
 
-  /* describe("Default Deposits", () => {
+  describe("Deposit default", async () => {
+    let usdcBalance: any;
     beforeEach(async () => {
-      await wmatic.deposit({ value: toEther(100) });
-      await wmatic.approve(ngi.address, toEther(100));
-    });
-
-    it("Optimizer 0", async () => {
-      await ngi.test_uni(wmatic.address, "0", toEther(100));
-      const usdcBalance: any = await usdc.balanceOf(accounts[0].address);
-      expect(usdcBalance).to.be.greaterThan(0);
-
+      await wmatic.deposit({ value: toEther(1) });
+      await wmatic.approve(ngi.address, toEther(1));
+      await ngi.test_swap(wmatic.address, "0", toEther(1));
+      usdcBalance = await usdc.balanceOf(accounts[0].address);
       await usdc.approve(ngi.address, usdcBalance);
-      await ngi.deposit("0", usdcBalance, "1");
-      const nigBalance: any = await ngi.balanceOf(accounts[0].address);
-      console.log(`Deposited : ${(usdcBalance / 1e6).toString()} USDC 
-      \nGot : ${fromEther(nigBalance)} NGI`);
+    });
+    it("No optimization", async () => {
+      await ngi.deposit("0", usdcBalance, "0");
+      const ngiBalance = await ngi.balanceOf(accounts[0].address);
+      console.log(
+        `${(usdcBalance / 10 ** 6).toString()} USDC => ${fromEther(
+          ngiBalance
+        )} NGI`
+      );
     });
 
     it("Optimizer 1", async () => {
-      await ngi.test_uni(wmatic.address, "0", toEther(100));
-      const usdcBalance: any = await usdc.balanceOf(accounts[0].address);
-      expect(usdcBalance).to.be.greaterThan(0);
-
-      await usdc.approve(ngi.address, usdcBalance);
-      await ngi.deposit("0", usdcBalance, "2");
-      const nigBalance: any = await ngi.balanceOf(accounts[0].address);
-      console.log(`Deposited : ${(usdcBalance / 1e6).toString()} USDC 
-      \nGot : ${fromEther(nigBalance)} NGI`);
+      await ngi.deposit("0", usdcBalance, "1");
+      const ngiBalance = await ngi.balanceOf(accounts[0].address);
+      console.log(
+        `${(usdcBalance / 10 ** 6).toString()} USDC => ${fromEther(
+          ngiBalance
+        )} NGI`
+      );
     });
-  }); */
+
+    it("Optimizer 2", async () => {
+      await ngi.deposit("0", usdcBalance, "2");
+      const ngiBalance = await ngi.balanceOf(accounts[0].address);
+      console.log(
+        `${(usdcBalance / 10 ** 6).toString()} USDC => ${fromEther(
+          ngiBalance
+        )} NGI`
+      );
+    });
+
+    it("Optimizer 3", async () => {
+      await ngi.deposit("0", usdcBalance, "3");
+      const ngiBalance = await ngi.balanceOf(accounts[0].address);
+      console.log(
+        `${(usdcBalance / 10 ** 6).toString()} USDC => ${fromEther(
+          ngiBalance
+        )} NGI`
+      );
+    });
+
+    it("Optimizer 4", async () => {
+      await ngi.deposit("0", usdcBalance, "4");
+      const ngiBalance = await ngi.balanceOf(accounts[0].address);
+      console.log(
+        `${(usdcBalance / 10 ** 6).toString()} USDC => ${fromEther(
+          ngiBalance
+        )} NGI`
+      );
+    });
+  });
+
+  describe("Withdraw default", async () => {
+    let ngiBalance: any;
+    beforeEach(async () => {
+      await wmatic.deposit({ value: toEther(1) });
+      await wmatic.approve(ngi.address, toEther(1));
+      await ngi.test_swap(wmatic.address, "0", toEther(1));
+      let usdcBalance = await usdc.balanceOf(accounts[0].address);
+      await usdc.approve(ngi.address, usdcBalance);
+      await ngi.deposit("0", usdcBalance, "0");
+
+      ngiBalance = await ngi.balanceOf(accounts[0].address);
+      await wmatic.deposit({ value: toEther(1) });
+      await wmatic.approve(ngi.address, toEther(1));
+      await ngi.test_swap(wmatic.address, "0", toEther(1));
+      usdcBalance = await usdc.balanceOf(accounts[0].address);
+      await usdc.approve(ngi.address, usdcBalance);
+      await ngi.deposit("0", usdcBalance, "0");
+    });
+    it("No optimization", async () => {
+      await ngi.withdrawUsdc(ngiBalance, "0");
+      const usdcBalance = await usdc.balanceOf(accounts[0].address);
+      console.log(
+        `${fromEther(ngiBalance)} NGI => ${(
+          usdcBalance /
+          10 ** 6
+        ).toString()} USDC `
+      );
+    });
+
+    it("Optimization 1", async () => {
+      await ngi.withdrawUsdc(ngiBalance, "1");
+      const usdcBalance = await usdc.balanceOf(accounts[0].address);
+      console.log(
+        `${fromEther(ngiBalance)} NGI => ${(
+          usdcBalance /
+          10 ** 6
+        ).toString()} USDC `
+      );
+    });
+
+    it("Optimization 2", async () => {
+      await ngi.withdrawUsdc(ngiBalance, "2");
+      const usdcBalance = await usdc.balanceOf(accounts[0].address);
+      console.log(
+        `${fromEther(ngiBalance)} NGI => ${(
+          usdcBalance /
+          10 ** 6
+        ).toString()} USDC `
+      );
+    });
+
+    it("Optimization 3", async () => {
+      await ngi.withdrawUsdc(ngiBalance, "3");
+      const usdcBalance = await usdc.balanceOf(accounts[0].address);
+      console.log(
+        `${fromEther(ngiBalance)} NGI => ${(
+          usdcBalance /
+          10 ** 6
+        ).toString()} USDC `
+      );
+    });
+
+    it("Optimization 4", async () => {
+      await ngi.withdrawUsdc(ngiBalance, "4");
+      const usdcBalance = await usdc.balanceOf(accounts[0].address);
+      console.log(
+        `${fromEther(ngiBalance)} NGI => ${(
+          usdcBalance /
+          10 ** 6
+        ).toString()} USDC `
+      );
+    });
+  });
+
+  describe("Deposit custom", () => {
+    it("Should get better result than the default option", async () => {
+      await wmatic.deposit({ value: toEther(10) });
+      await wmatic.approve(ngi.address, toEther(10));
+      await ngi.test_swap(wmatic.address, "0", toEther(10));
+      let usdcBalance = await usdc.balanceOf(accounts[0].address);
+      await usdc.approve(ngi.address, usdcBalance);
+      await ngi.depositCustom("0", [
+        usdcBalance * 0.4,
+        usdcBalance * 0.4,
+        usdcBalance * 0.2,
+        usdcBalance * 0.2,
+        usdcBalance * 0.1,
+      ]);
+      const ngiBalance = await ngi.balanceOf(accounts[0].address);
+      console.log(
+        `${(usdcBalance / 10 ** 6).toString()} USDC => ${fromEther(
+          ngiBalance
+        )} NGI`
+      );
+      await wmatic.deposit({ value: toEther(10) });
+      await wmatic.approve(ngi.address, toEther(10));
+      await ngi.test_swap(wmatic.address, "0", toEther(10));
+      usdcBalance = await usdc.balanceOf(accounts[0].address);
+      await usdc.approve(ngi.address, usdcBalance);
+      await ngi.deposit("0", usdcBalance, "0");
+      const ngiBalanceAfter = await ngi.balanceOf(accounts[0].address);
+      console.log(
+        `${(usdcBalance / 10 ** 6).toString()} USDC => ${fromEther(
+          ngiBalanceAfter - ngiBalance
+        )} NGI`
+      );
+    });
+  });
+  describe("Withdraw custom", () => {
+    it("Should get better result than the default option", async () => {});
+  });
 });
-
-/**
-88888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888
-88888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888
-88888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888
-88888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888
-8888888888888888888888888ZZZZZZ8888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888
-888888888888888888Z2SS2222aa22SSSXXX28888888888888888Z88888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888
-888888888888888ZXS2ZZSri:,.  .,:;7SZaXXXZ888888888887.X8888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888
-88888888888882rX8ZX:.   .::i::.     :7aZ77Z888888888; ;888888888888888888888888888888888888888888888888888888Z::::2888888888888888888888888888888888888888888882::,:Z88888888888888888888888888888888888
-88888888888Z;iZ8S,  .iSZ8888888ZS;.   .;Zai788888888; ;888888888888888888888888888888888888888888888888888888Z.   S88888888888888888888888888888888888888888888S   .Z88888888888888888888888888888888888
-8888888888a,,Z8S   ,a88888Sri;7a88Z7.   :ZZ,iZ888888; ;888888888888888888888888888888888888888888888888888888Z.   S88888888888888888888888888888888888888888888S   .Z88888888888888888888888888888888888
-888888888Z, ;88i   X888888888S, iZ88S    78X ;888888; ;88888S777S82X7r;;r7Xa8888888888888ZSXrr;;r7X2Z88888888Z.   SZ2X7;;;r7X2Z8888888Z7777Z888888888Z7777Z8888S   .Z888888Z2SX7r;;;;rX2Z888888888888888
-888888888r  ,Z8X   :a888888888;  S888.   ;8a  288888; ;88888;   ..          ,7Z8888888ZX:.          .iX888888Z.   ,.          .i288888Z    a888888888a    a8888S   .Z88888r             .i28888888888888
-888888888,   iZ8X,  .;SZ88ZZSi  :Z88X    28X  r88888; ;88888;    ,;XS22SXi.   :Z888882,   .;XS222Xr:   :a8888Z.    ,;7S222Xr:    ;Z888a    a888888888a    a8888S   .Z88888Zii7XS2aa2S7i.  .X888888888888
-888888888,    .XZ8S;,.  ...  ,iS88Z;    r8Z,  r88888; ;88888;   i888888888a,   i8888a.   :2aaaaaaaaa;   ,Z888Z.   78888888888X.   r888a    a888888888a    a8888S   .Z8888888Z2XX777XXSaS.  .a88888888888
-888888888;      .;XZ8Za2SS2aZ88aXi.   .X82,   S88888; ;88888;   ;8888888888X   .Z888X                    X888Z.   S88888888888i   :888a    a888888888a    a8888S   .Z8888Zr,                X88888888888
-888888888a. ,.      .:i;rrr;i:.     ,7Za;    iZ88888; ;88888;   ;88888888882   .Z888S    :7777777777777772888Z.   S8888888888Z,   i888Z    X888888888a    a8888S   .Z888Z.   :XS2222SX7r.   788888888888
-88888888882. .,::,              ,i7aaX:     :Z888888; ;88888;   ;88888888882   .Z8888r    iXaZ888888Z2a888888Z.   iXaZ88888a7.   ,a8888i   .7Z88888ZXi    a8888S   .Z8882    rZ88888ZaXi    r88888888888
-88888888888a:    ,i;r7777777XS22S7i,       ;Z8888888; ;88888;   ;88888888882   .Z88888Si.    ..,:,..  .a88888Z.      ..,,,.    .rZ88888Zi     .,,,.       a8888S   .Z88887.   .,,,,..       r88888888888
-8888888888888X,        ..,,,..           i2888888888; ;88888r,,,r88888888882,,,,Z8888888ZXri:......,:;7288888Z,,,,rri:.....,irSZ888888888a7i:.....:i7X,,,,a88882,,,:Z88888aXi,......:i7Si,,,788888888888
-8888888888888882;.                    :7a88888888888r 7888888888888888888888888888888888888888888888888888888888888888888Z888888888888888888888888888888888888888888888888888888888888888888888888888888
-888888888888888888aX;:.          ,:rXZ888888888888888a88888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888
-88888888888888888888888Zaa2222aa888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888
-88888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888
-88888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888
-88888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888
-88888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888888
-
-
- */
