@@ -71,7 +71,7 @@ describe("NGI", function () {
 
   describe("Price", () => {
     it("Should return correct virtual price", async () => {
-      const res: any = await ngi.getVirtualPrice();
+      const res = await ngi.getVirtualPrice();
       console.log(`${(res / 1e18).toString()} $ `);
     });
   });
@@ -79,9 +79,9 @@ describe("NGI", function () {
   describe("Deposit default", async () => {
     let usdcBalance: any;
     beforeEach(async () => {
-      await wmatic.deposit({ value: toEther(1) });
-      await wmatic.approve(ngi.address, toEther(1));
-      await ngi.test_swap(wmatic.address, "0", toEther(1));
+      await wmatic.deposit({ value: toEther(1000) });
+      await wmatic.approve(ngi.address, toEther(1000));
+      await ngi.test_swap(wmatic.address, "0", toEther(1000));
       usdcBalance = await usdc.balanceOf(accounts[0].address);
       await usdc.approve(ngi.address, usdcBalance);
     });
@@ -147,12 +147,6 @@ describe("NGI", function () {
       await ngi.deposit("0", usdcBalance, "0");
 
       ngiBalance = await ngi.balanceOf(accounts[0].address);
-      await wmatic.deposit({ value: toEther(1) });
-      await wmatic.approve(ngi.address, toEther(1));
-      await ngi.test_swap(wmatic.address, "0", toEther(1));
-      usdcBalance = await usdc.balanceOf(accounts[0].address);
-      await usdc.approve(ngi.address, usdcBalance);
-      await ngi.deposit("0", usdcBalance, "0");
     });
     it("No optimization", async () => {
       await ngi.withdrawUsdc(ngiBalance, "0");
@@ -210,7 +204,7 @@ describe("NGI", function () {
     });
   });
 
-  describe("Deposit custom", () => {
+  /* describe("Deposit custom", () => {
     it("Should get better result than the default option", async () => {
       await wmatic.deposit({ value: toEther(10) });
       await wmatic.approve(ngi.address, toEther(10));
@@ -246,5 +240,5 @@ describe("NGI", function () {
   });
   describe("Withdraw custom", () => {
     it("Should get better result than the default option", async () => {});
-  });
+  }); */
 });

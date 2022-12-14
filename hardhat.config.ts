@@ -6,7 +6,7 @@ import "hardhat-gas-reporter";
 /** @type import('hardhat/config').HardhatUserConfig */
 const CMCAP_KEY = process.env.COINMARKETCAP_API_KEY;
 const key = process.env.ALCHEMY_KEY;
-
+const pKey = process.env.PRIVATE_KEY;
 const config: HardhatUserConfig = {
   gasReporter: {
     enabled: true,
@@ -38,6 +38,15 @@ const config: HardhatUserConfig = {
         url: `https://polygon-mainnet.g.alchemy.com/v2/${key}`,
       },
     },
+
+    polygon: {
+      url: `https://polygon-mainnet.g.alchemy.com/v2/${key}`,
+      accounts: [pKey],
+    },
+  },
+
+  etherscan: {
+    apiKey: process.env.POLYGONSCAN_KEY,
   },
 };
 

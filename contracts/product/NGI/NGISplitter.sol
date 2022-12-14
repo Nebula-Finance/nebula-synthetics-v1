@@ -56,27 +56,27 @@ contract NGISplitter is PriceConsumerNGI {
             return _swapCrv(i, j, dx);
         }
         if (split == 2) {
-            return _swapCrv(i, j, dx / 2) 
-            + _swapUniV3(_in, _out, dx / 2);
+            return _swapCrv(i, j, dx * 65 / 100) 
+            + _swapUniV3(_in, _out, dx * 35 /100);
         }
         if (split == 3) {
-            return _swapCrv(i, j, dx / 3) 
-            + _swapUniV3(_in, _out, dx / 3) 
-            + _swapBal(_in, _out, dx / 3);
+            return _swapCrv(i, j, dx * 50 / 100) 
+            + _swapUniV3(_in, _out, dx * 25 / 100) 
+            + _swapBal(_in, _out, dx * 25 / 100);
             
         }
         if (split == 4) {
-            return _swapCrv(i, j, dx / 4)  
-            + _swapUniV3(_in, _out,dx / 4) 
-            + _swapBal(_in, _out, dx / 4)
-            + _swapSushi(_in, _out, dx / 4);
+            return _swapCrv(i, j, dx * 40 / 100)  
+            + _swapUniV3(_in, _out,dx * 25 / 100) 
+            + _swapBal(_in, _out, dx  * 25 / 100 )
+            + _swapSushi(_in, _out, dx * 10 / 100);
         }
 
-        return _swapCrv(i, j, dx / 5) 
-        + _swapUniV3(_in, _out, dx / 5) 
-        + _swapBal(_in, _out, dx / 5) 
-        + _swapSushi(_in, _out, dx / 5)
-        + _swapQuick(_in, _out , dx / 5);
+        return _swapCrv(i, j, dx * 30 / 100) 
+        + _swapUniV3(_in, _out, dx * 30 / 100) 
+        + _swapBal(_in, _out, dx  * 25 / 100) 
+        + _swapSushi(_in, _out, dx * 10 / 100)
+        + _swapQuick(_in, _out , dx  * 5 / 100);
     }
 
     function swapWithParamsCustom(uint256 _i, uint256 _j,  uint256[5] memory _splits)
@@ -123,7 +123,7 @@ contract NGISplitter is PriceConsumerNGI {
         uint256 iUnderlying = _getUnderlying(_i);
         uint256 jUnderlying = _getUnderlying(_j);
         uint256 dy = crv.get_dy_underlying(iUnderlying, jUnderlying, _dx);
-        crv.exchange_underlying(iUnderlying, jUnderlying , _dx, 0);
+        crv.exchange_underlying(iUnderlying, jUnderlying , _dx,0 );
         return dy;
         
     }
@@ -211,7 +211,7 @@ contract NGISplitter is PriceConsumerNGI {
        return
          _dx == 0 ? 0 
         : route[0] == route[1] ? _dx
-        : sushi.swapExactTokensForTokens(_dx,0, route , address(this), block.timestamp)[1];
+        : quick.swapExactTokensForTokens(_dx,0, route , address(this), block.timestamp)[1];
     }
 
     
