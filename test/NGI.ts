@@ -2,6 +2,7 @@ import { ethers } from "hardhat";
 import { expect } from "chai";
 import * as dotenv from "dotenv";
 import { ICurvePool, IERC20, IWETH, GenesisIndex } from "../typechain-types";
+import { any } from "hardhat/internal/core/params/argumentTypes";
 dotenv.config();
 
 function toEther(n: number) {
@@ -71,7 +72,7 @@ describe("NGI", function () {
 
   describe("Price", () => {
     it("Should return correct virtual price", async () => {
-      const res = await ngi.getVirtualPrice();
+      const res : any = await ngi.getVirtualPrice();
       console.log(`${(res / 1e18).toString()} $ `);
     });
   });
@@ -87,7 +88,7 @@ describe("NGI", function () {
     });
     it("No optimization", async () => {
       await ngi.deposit("0", usdcBalance, "0");
-      const ngiBalance = await ngi.balanceOf(accounts[0].address);
+      const ngiBalance : any = await ngi.balanceOf(accounts[0].address);
       console.log(
         `${(usdcBalance / 10 ** 6).toString()} USDC => ${fromEther(
           ngiBalance
@@ -97,7 +98,7 @@ describe("NGI", function () {
 
     it("Optimizer 1", async () => {
       await ngi.deposit("0", usdcBalance, "1");
-      const ngiBalance = await ngi.balanceOf(accounts[0].address);
+      const ngiBalance : any = await ngi.balanceOf(accounts[0].address);
       console.log(
         `${(usdcBalance / 10 ** 6).toString()} USDC => ${fromEther(
           ngiBalance
@@ -107,7 +108,7 @@ describe("NGI", function () {
 
     it("Optimizer 2", async () => {
       await ngi.deposit("0", usdcBalance, "2");
-      const ngiBalance = await ngi.balanceOf(accounts[0].address);
+      const ngiBalance : any = await ngi.balanceOf(accounts[0].address);
       console.log(
         `${(usdcBalance / 10 ** 6).toString()} USDC => ${fromEther(
           ngiBalance
@@ -117,7 +118,7 @@ describe("NGI", function () {
 
     it("Optimizer 3", async () => {
       await ngi.deposit("0", usdcBalance, "3");
-      const ngiBalance = await ngi.balanceOf(accounts[0].address);
+      const ngiBalance : any = await ngi.balanceOf(accounts[0].address);
       console.log(
         `${(usdcBalance / 10 ** 6).toString()} USDC => ${fromEther(
           ngiBalance
@@ -127,7 +128,7 @@ describe("NGI", function () {
 
     it("Optimizer 4", async () => {
       await ngi.deposit("0", usdcBalance, "4");
-      const ngiBalance = await ngi.balanceOf(accounts[0].address);
+      const ngiBalance : any = await ngi.balanceOf(accounts[0].address);
       console.log(
         `${(usdcBalance / 10 ** 6).toString()} USDC => ${fromEther(
           ngiBalance
@@ -142,15 +143,16 @@ describe("NGI", function () {
       await wmatic.deposit({ value: toEther(1) });
       await wmatic.approve(ngi.address, toEther(1));
       await ngi.test_swap(wmatic.address, "0", toEther(1));
-      let usdcBalance = await usdc.balanceOf(accounts[0].address);
+      let usdcBalance : any = await usdc.balanceOf(accounts[0].address);
       await usdc.approve(ngi.address, usdcBalance);
       await ngi.deposit("0", usdcBalance, "0");
 
       ngiBalance = await ngi.balanceOf(accounts[0].address);
     });
+
     it("No optimization", async () => {
       await ngi.withdrawUsdc(ngiBalance, "0");
-      const usdcBalance = await usdc.balanceOf(accounts[0].address);
+      const usdcBalance : any = await usdc.balanceOf(accounts[0].address);
       console.log(
         `${fromEther(ngiBalance)} NGI => ${(
           usdcBalance /
@@ -161,7 +163,7 @@ describe("NGI", function () {
 
     it("Optimization 1", async () => {
       await ngi.withdrawUsdc(ngiBalance, "1");
-      const usdcBalance = await usdc.balanceOf(accounts[0].address);
+      const usdcBalance : any = await usdc.balanceOf(accounts[0].address);
       console.log(
         `${fromEther(ngiBalance)} NGI => ${(
           usdcBalance /
@@ -172,7 +174,7 @@ describe("NGI", function () {
 
     it("Optimization 2", async () => {
       await ngi.withdrawUsdc(ngiBalance, "2");
-      const usdcBalance = await usdc.balanceOf(accounts[0].address);
+      const usdcBalance : any = await usdc.balanceOf(accounts[0].address);
       console.log(
         `${fromEther(ngiBalance)} NGI => ${(
           usdcBalance /
@@ -183,7 +185,7 @@ describe("NGI", function () {
 
     it("Optimization 3", async () => {
       await ngi.withdrawUsdc(ngiBalance, "3");
-      const usdcBalance = await usdc.balanceOf(accounts[0].address);
+      const usdcBalance : any = await usdc.balanceOf(accounts[0].address);
       console.log(
         `${fromEther(ngiBalance)} NGI => ${(
           usdcBalance /
@@ -194,7 +196,7 @@ describe("NGI", function () {
 
     it("Optimization 4", async () => {
       await ngi.withdrawUsdc(ngiBalance, "4");
-      const usdcBalance = await usdc.balanceOf(accounts[0].address);
+      const usdcBalance : any = await usdc.balanceOf(accounts[0].address);
       console.log(
         `${fromEther(ngiBalance)} NGI => ${(
           usdcBalance /
