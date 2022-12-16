@@ -10,8 +10,8 @@ import "../../interfaces/ICurvePool.sol";
 import "./PriceConsumerNGI.sol";
 
 contract NGISplitter is PriceConsumerNGI {
-    mapping(uint256 => address) private addressRouting;
-    address[3] public tokens = [
+    uint256 constant  MAX_INT_NUMBER = 115792089237316195423570985008687907853269984665640564039457584007913129639935;
+    address[3] public  tokens = [
         0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174, //[0] => USDC
         0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6, //[1] => wBTC
         0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619 // [2] => wETH
@@ -19,29 +19,29 @@ contract NGISplitter is PriceConsumerNGI {
     uint40[3] multipliers = [1e12, 1e10, 1];
     uint16[3] marketCapWeigth = [0, 7400, 2600];
 
-
     ICurvePool constant crv = 
-        ICurvePool(0x3FCD5De6A9fC8A99995c406c77DDa3eD7E406f81); // CURVE pool
+        ICurvePool(0x3FCD5De6A9fC8A99995c406c77DDa3eD7E406f81); // CURVE 
 
     ISwapRouter constant uniV3 =
-        ISwapRouter(0xE592427A0AEce92De3Edee1F18E0157C05861564); // UNISWAPv3 router
-
-    IVaultBalancer constant bal =
-        IVaultBalancer(0xBA12222222228d8Ba445958a75a0704d566BF2C8); // BALANCER router
-
-    IUniswapV2Router02 constant sushi = 
-        IUniswapV2Router02(0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506) ;//SUSHISWAP router
+        ISwapRouter(0xE592427A0AEce92De3Edee1F18E0157C05861564); // UNISWAPv3 
 
     IUniswapV2Router02 constant quick = 
-        IUniswapV2Router02(0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff); //UNISWAPv2 router
+        IUniswapV2Router02(0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff); //QUICKSWAP
 
-    constructor() {
-        addressRouting[0] = address(crv);
-        addressRouting[1] = address(uniV3);
-        addressRouting[2] = address(bal);
-        addressRouting[3] = address(sushi);
-        addressRouting[4] = address(quick);
-    }
+    IUniswapV2Router02 constant sushi = 
+        IUniswapV2Router02(0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506) ;//SUSHISWAP 
+
+    IVaultBalancer constant bal =
+        IVaultBalancer(0xBA12222222228d8Ba445958a75a0704d566BF2C8); // BALANCER 
+
+
+    address[5]  addressRouting = [
+        address(crv),
+        address(uniV3),
+        address(quick),
+        address(sushi),
+        address(bal)
+    ];
 
     function swapWithParams(
         uint256 i,
@@ -56,27 +56,27 @@ contract NGISplitter is PriceConsumerNGI {
             return _swapCrv(i, j, dx);
         }
         if (split == 2) {
-            return _swapCrv(i, j, dx * 65 / 100) 
-            + _swapUniV3(_in, _out, dx * 35 /100);
+            return _swapCrv(i, j, dx * 6700 / 10000) 
+            + _swapUniV3(_in, _out, dx * 3300 /10000);
         }
         if (split == 3) {
-            return _swapCrv(i, j, dx * 50 / 100) 
-            + _swapUniV3(_in, _out, dx * 25 / 100) 
-            + _swapBal(_in, _out, dx * 25 / 100);
+            return _swapCrv(i, j, dx * 6000 / 10000) 
+            + _swapUniV3(_in, _out, dx * 3100 / 10000) 
+            + _swapQuick(_in, _out, dx * 900 / 10000);
             
         }
         if (split == 4) {
-            return _swapCrv(i, j, dx * 40 / 100)  
-            + _swapUniV3(_in, _out,dx * 25 / 100) 
-            + _swapBal(_in, _out, dx  * 25 / 100 )
-            + _swapSushi(_in, _out, dx * 10 / 100);
+            return _swapCrv(i, j, dx * 5869 / 10000)  
+            + _swapUniV3(_in, _out,dx * 3100 / 10000) 
+            + _swapQuick(_in, _out, dx  * 800 / 10000 )
+            + _swapSushi(_in, _out, dx * 231 / 10000);
         }
 
-        return _swapCrv(i, j, dx * 30 / 100) 
-        + _swapUniV3(_in, _out, dx * 30 / 100) 
-        + _swapBal(_in, _out, dx  * 25 / 100) 
-        + _swapSushi(_in, _out, dx * 10 / 100)
-        + _swapQuick(_in, _out , dx  * 5 / 100);
+        return _swapCrv(i, j, dx * 5800 / 10000) 
+        + _swapUniV3(_in, _out, dx * 3000 / 10000) 
+        + _swapQuick(_in, _out , dx  * 800 / 10000)
+        + _swapSushi(_in, _out, dx * 264 / 10000)
+        + _swapBal(_in, _out, dx  * 136 / 10000);
     }
 
     function swapWithParamsCustom(uint256 _i, uint256 _j,  uint256[5] memory _splits)
@@ -100,9 +100,12 @@ contract NGISplitter is PriceConsumerNGI {
         uint256 _split
     ) internal {
         uint256 s = _split;
-        address token = tokens[_token];
+        IERC20 token = IERC20(tokens[_token]);
         for (uint256 i = 0; i < s;) {
-            TransferHelper.safeApprove(token, addressRouting[i], _amount);
+            address dex = addressRouting[i];
+            if(token.allowance(msg.sender, dex)<_amount){
+                token.approve(dex, MAX_INT_NUMBER );
+            }
             unchecked {
                 ++i;
             }
@@ -123,7 +126,7 @@ contract NGISplitter is PriceConsumerNGI {
         uint256 iUnderlying = _getUnderlying(_i);
         uint256 jUnderlying = _getUnderlying(_j);
         uint256 dy = crv.get_dy_underlying(iUnderlying, jUnderlying, _dx);
-        crv.exchange_underlying(iUnderlying, jUnderlying , _dx,0 );
+        crv.exchange_underlying(iUnderlying, jUnderlying , _dx, 0 );
         return dy;
         
     }
@@ -217,15 +220,7 @@ contract NGISplitter is PriceConsumerNGI {
     
 
     function _getUnderlying(uint256 n) internal pure returns(uint256){
-        if(n==0){
-            return 1;
-        }
-        if(n==1){
-            return 3;
-        }
-        if(n==2){
-            return 4;
-        }
+        return n==0 ? 1 : n==1 ? 3 :  4;
     }
 
 

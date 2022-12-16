@@ -2,6 +2,7 @@ import { ethers } from "hardhat";
 import { expect } from "chai";
 import * as dotenv from "dotenv";
 import { ICurvePool, IERC20, IWETH, GenesisIndex } from "../typechain-types";
+import { any } from "hardhat/internal/core/params/argumentTypes";
 dotenv.config();
 
 function toEther(n: number) {
@@ -38,6 +39,7 @@ describe("NGI", function () {
     wmatic = await ethers.getContractAt("IWETH", WMATIC);
   });
 
+  // ALL THE PROTOCOLS WORK FINE
   describe("Testing Pools", () => {
     let usdcBalance: any;
     beforeEach(async () => {
@@ -69,25 +71,27 @@ describe("NGI", function () {
     });
   });
 
+  // returns price of index in USD (18 decimals)
   describe("Price", () => {
     it("Should return correct virtual price", async () => {
-      const res = await ngi.getVirtualPrice();
+      const res: any = await ngi.getVirtualPrice();
       console.log(`${(res / 1e18).toString()} $ `);
     });
   });
 
-  describe("Deposit default", async () => {
+  // deposit using the default settings: using USDC
+  describe("Deposit default : USDC", async () => {
     let usdcBalance: any;
     beforeEach(async () => {
-      await wmatic.deposit({ value: toEther(1000) });
-      await wmatic.approve(ngi.address, toEther(1000));
-      await ngi.test_swap(wmatic.address, "0", toEther(1000));
+      await wmatic.deposit({ value: toEther(10) });
+      await wmatic.approve(ngi.address, toEther(10));
+      await ngi.test_swap(wmatic.address, "0", toEther(10));
       usdcBalance = await usdc.balanceOf(accounts[0].address);
       await usdc.approve(ngi.address, usdcBalance);
     });
     it("No optimization", async () => {
       await ngi.deposit("0", usdcBalance, "0");
-      const ngiBalance = await ngi.balanceOf(accounts[0].address);
+      const ngiBalance: any = await ngi.balanceOf(accounts[0].address);
       console.log(
         `${(usdcBalance / 10 ** 6).toString()} USDC => ${fromEther(
           ngiBalance
@@ -97,7 +101,7 @@ describe("NGI", function () {
 
     it("Optimizer 1", async () => {
       await ngi.deposit("0", usdcBalance, "1");
-      const ngiBalance = await ngi.balanceOf(accounts[0].address);
+      const ngiBalance: any = await ngi.balanceOf(accounts[0].address);
       console.log(
         `${(usdcBalance / 10 ** 6).toString()} USDC => ${fromEther(
           ngiBalance
@@ -107,7 +111,7 @@ describe("NGI", function () {
 
     it("Optimizer 2", async () => {
       await ngi.deposit("0", usdcBalance, "2");
-      const ngiBalance = await ngi.balanceOf(accounts[0].address);
+      const ngiBalance: any = await ngi.balanceOf(accounts[0].address);
       console.log(
         `${(usdcBalance / 10 ** 6).toString()} USDC => ${fromEther(
           ngiBalance
@@ -117,7 +121,7 @@ describe("NGI", function () {
 
     it("Optimizer 3", async () => {
       await ngi.deposit("0", usdcBalance, "3");
-      const ngiBalance = await ngi.balanceOf(accounts[0].address);
+      const ngiBalance: any = await ngi.balanceOf(accounts[0].address);
       console.log(
         `${(usdcBalance / 10 ** 6).toString()} USDC => ${fromEther(
           ngiBalance
@@ -127,7 +131,7 @@ describe("NGI", function () {
 
     it("Optimizer 4", async () => {
       await ngi.deposit("0", usdcBalance, "4");
-      const ngiBalance = await ngi.balanceOf(accounts[0].address);
+      const ngiBalance: any = await ngi.balanceOf(accounts[0].address);
       console.log(
         `${(usdcBalance / 10 ** 6).toString()} USDC => ${fromEther(
           ngiBalance
@@ -136,21 +140,145 @@ describe("NGI", function () {
     });
   });
 
+  // deposit using the default settings: using WBTC
+  describe("Deposit default : WBTC", async () => {
+    let wbtcBalance: any;
+    beforeEach(async () => {
+      await wmatic.deposit({ value: toEther(10) });
+      await wmatic.approve(ngi.address, toEther(10));
+      await ngi.test_swap(wmatic.address, "1", toEther(10));
+      wbtcBalance = await wbtc.balanceOf(accounts[0].address);
+      await wbtc.approve(ngi.address, wbtcBalance);
+    });
+    it("No optimization", async () => {
+      await ngi.deposit("1", wbtcBalance, "0");
+      const ngiBalance: any = await ngi.balanceOf(accounts[0].address);
+      console.log(
+        `${(wbtcBalance / 10 ** 8).toString()} WBTC => ${fromEther(
+          ngiBalance
+        )} NGI`
+      );
+    });
+
+    it("Optimizer 1", async () => {
+      await ngi.deposit("1", wbtcBalance, "1");
+      const ngiBalance: any = await ngi.balanceOf(accounts[0].address);
+      console.log(
+        `${(wbtcBalance / 10 ** 8).toString()} WBTC => ${fromEther(
+          ngiBalance
+        )} NGI`
+      );
+    });
+
+    it("Optimizer 2", async () => {
+      await ngi.deposit("1", wbtcBalance, "2");
+      const ngiBalance: any = await ngi.balanceOf(accounts[0].address);
+      console.log(
+        `${(wbtcBalance / 10 ** 8).toString()} WBTC => ${fromEther(
+          ngiBalance
+        )} NGI`
+      );
+    });
+
+    it("Optimizer 3", async () => {
+      await ngi.deposit("1", wbtcBalance, "3");
+      const ngiBalance: any = await ngi.balanceOf(accounts[0].address);
+      console.log(
+        `${(wbtcBalance / 10 ** 8).toString()} WBTC => ${fromEther(
+          ngiBalance
+        )} NGI`
+      );
+    });
+
+    it("Optimizer 4", async () => {
+      await ngi.deposit("1", wbtcBalance, "4");
+      const ngiBalance: any = await ngi.balanceOf(accounts[0].address);
+      console.log(
+        `${(wbtcBalance / 10 ** 8).toString()} WBTC => ${fromEther(
+          ngiBalance
+        )} NGI`
+      );
+    });
+  });
+
+  // deposit using the default settings: using WETH
+  describe("Deposit default : WETH", async () => {
+    let wethBalance: any;
+    beforeEach(async () => {
+      await wmatic.deposit({ value: toEther(10) });
+      await wmatic.approve(ngi.address, toEther(10));
+      await ngi.test_swap(wmatic.address, "2", toEther(10));
+      wethBalance = await weth.balanceOf(accounts[0].address);
+      await weth.approve(ngi.address, wethBalance);
+    });
+    it("No optimization", async () => {
+      await ngi.deposit("2", wethBalance, "0");
+      const ngiBalance: any = await ngi.balanceOf(accounts[0].address);
+      console.log(
+        `${(wethBalance / 10 ** 18).toString()} WETH => ${fromEther(
+          ngiBalance
+        )} NGI`
+      );
+    });
+
+    it("Optimizer 1", async () => {
+      await ngi.deposit("2", wethBalance, "1");
+      const ngiBalance: any = await ngi.balanceOf(accounts[0].address);
+      console.log(
+        `${(wethBalance / 10 ** 18).toString()} WETH => ${fromEther(
+          ngiBalance
+        )} NGI`
+      );
+    });
+
+    it("Optimizer 2", async () => {
+      await ngi.deposit("2", wethBalance, "2");
+      const ngiBalance: any = await ngi.balanceOf(accounts[0].address);
+      console.log(
+        `${(wethBalance / 10 ** 18).toString()} WETH => ${fromEther(
+          ngiBalance
+        )} NGI`
+      );
+    });
+
+    it("Optimizer 3", async () => {
+      await ngi.deposit("2", wethBalance, "3");
+      const ngiBalance: any = await ngi.balanceOf(accounts[0].address);
+      console.log(
+        `${(wethBalance / 10 ** 18).toString()} WETH => ${fromEther(
+          ngiBalance
+        )} NGI`
+      );
+    });
+
+    it("Optimizer 4", async () => {
+      await ngi.deposit("2", wethBalance, "4");
+      const ngiBalance: any = await ngi.balanceOf(accounts[0].address);
+      console.log(
+        `${(wethBalance / 10 ** 18).toString()} WETH => ${fromEther(
+          ngiBalance
+        )} NGI`
+      );
+    });
+  });
+
+  // withdraw using the default settings
   describe("Withdraw default", async () => {
     let ngiBalance: any;
     beforeEach(async () => {
       await wmatic.deposit({ value: toEther(1) });
       await wmatic.approve(ngi.address, toEther(1));
       await ngi.test_swap(wmatic.address, "0", toEther(1));
-      let usdcBalance = await usdc.balanceOf(accounts[0].address);
+      let usdcBalance: any = await usdc.balanceOf(accounts[0].address);
       await usdc.approve(ngi.address, usdcBalance);
       await ngi.deposit("0", usdcBalance, "0");
 
       ngiBalance = await ngi.balanceOf(accounts[0].address);
     });
+
     it("No optimization", async () => {
       await ngi.withdrawUsdc(ngiBalance, "0");
-      const usdcBalance = await usdc.balanceOf(accounts[0].address);
+      const usdcBalance: any = await usdc.balanceOf(accounts[0].address);
       console.log(
         `${fromEther(ngiBalance)} NGI => ${(
           usdcBalance /
@@ -161,7 +289,7 @@ describe("NGI", function () {
 
     it("Optimization 1", async () => {
       await ngi.withdrawUsdc(ngiBalance, "1");
-      const usdcBalance = await usdc.balanceOf(accounts[0].address);
+      const usdcBalance: any = await usdc.balanceOf(accounts[0].address);
       console.log(
         `${fromEther(ngiBalance)} NGI => ${(
           usdcBalance /
@@ -172,7 +300,7 @@ describe("NGI", function () {
 
     it("Optimization 2", async () => {
       await ngi.withdrawUsdc(ngiBalance, "2");
-      const usdcBalance = await usdc.balanceOf(accounts[0].address);
+      const usdcBalance: any = await usdc.balanceOf(accounts[0].address);
       console.log(
         `${fromEther(ngiBalance)} NGI => ${(
           usdcBalance /
@@ -183,7 +311,7 @@ describe("NGI", function () {
 
     it("Optimization 3", async () => {
       await ngi.withdrawUsdc(ngiBalance, "3");
-      const usdcBalance = await usdc.balanceOf(accounts[0].address);
+      const usdcBalance: any = await usdc.balanceOf(accounts[0].address);
       console.log(
         `${fromEther(ngiBalance)} NGI => ${(
           usdcBalance /
@@ -194,7 +322,7 @@ describe("NGI", function () {
 
     it("Optimization 4", async () => {
       await ngi.withdrawUsdc(ngiBalance, "4");
-      const usdcBalance = await usdc.balanceOf(accounts[0].address);
+      const usdcBalance: any = await usdc.balanceOf(accounts[0].address);
       console.log(
         `${fromEther(ngiBalance)} NGI => ${(
           usdcBalance /
@@ -203,42 +331,4 @@ describe("NGI", function () {
       );
     });
   });
-
-  /* describe("Deposit custom", () => {
-    it("Should get better result than the default option", async () => {
-      await wmatic.deposit({ value: toEther(10) });
-      await wmatic.approve(ngi.address, toEther(10));
-      await ngi.test_swap(wmatic.address, "0", toEther(10));
-      let usdcBalance = await usdc.balanceOf(accounts[0].address);
-      await usdc.approve(ngi.address, usdcBalance);
-      await ngi.depositCustom("0", [
-        usdcBalance * 0.4,
-        usdcBalance * 0.4,
-        usdcBalance * 0.2,
-        usdcBalance * 0.2,
-        usdcBalance * 0.1,
-      ]);
-      const ngiBalance = await ngi.balanceOf(accounts[0].address);
-      console.log(
-        `${(usdcBalance / 10 ** 6).toString()} USDC => ${fromEther(
-          ngiBalance
-        )} NGI`
-      );
-      await wmatic.deposit({ value: toEther(10) });
-      await wmatic.approve(ngi.address, toEther(10));
-      await ngi.test_swap(wmatic.address, "0", toEther(10));
-      usdcBalance = await usdc.balanceOf(accounts[0].address);
-      await usdc.approve(ngi.address, usdcBalance);
-      await ngi.deposit("0", usdcBalance, "0");
-      const ngiBalanceAfter = await ngi.balanceOf(accounts[0].address);
-      console.log(
-        `${(usdcBalance / 10 ** 6).toString()} USDC => ${fromEther(
-          ngiBalanceAfter - ngiBalance
-        )} NGI`
-      );
-    });
-  });
-  describe("Withdraw custom", () => {
-    it("Should get better result than the default option", async () => {});
-  }); */
 });
