@@ -145,12 +145,12 @@ contract GenesisIndex is ERC20, Ownable, Pausable, ChainId, NGISplitter {
     {   
         require(ngiIn > 0 , "dx=0");
         require(optimization < 5, "optimization >= 5");
-        uint256 usdIn = getVirtualPrice() * ngiIn;
+
         uint256 balanceWBtc = IERC20(tokens[1]).balanceOf(address(this));
-        uint256 balanceWEth = IERC20(tokens[1]).balanceOf(address(this));
+        uint256 balanceWEth = IERC20(tokens[2]).balanceOf(address(this));
         uint256 wBtcIn = balanceWBtc * ngiIn / totalSupply();
         uint256 wEthIn = balanceWEth * ngiIn / totalSupply();
-        console.log( ngiIn / totalSupply());
+
         _burn(msg.sender, ngiIn);
         approveAMM(1, wBtcIn, optimization + 1);
         approveAMM(2, wEthIn, optimization + 1);
@@ -170,10 +170,12 @@ contract GenesisIndex is ERC20, Ownable, Pausable, ChainId, NGISplitter {
         require(ngiIn > 0 , "dx=0");
         require(_getTotal(percentagesWBTCSplit) == 10000 && _getTotal(percentagesWETHSplit) == 10000, "!=100%");
         _burn(msg.sender, ngiIn);
-        uint256 usdcIn = getVirtualPrice() * ngiIn;
-        uint256 wBtcIn = (usdcIn * 7400 / 10000) / getLatestPrice(1) / multipliers[1];
-        uint256 wEthIn = (usdcIn * 2600 / 10000) / getLatestPrice(2) / multipliers[2];
 
+        uint256 balanceWBtc = IERC20(tokens[1]).balanceOf(address(this));
+        uint256 balanceWEth = IERC20(tokens[2]).balanceOf(address(this));
+        uint256 wBtcIn = balanceWBtc * ngiIn / totalSupply();
+        uint256 wEthIn = balanceWEth * ngiIn / totalSupply();
+        
         uint256[5] memory btcSplits;
         uint256[5] memory ethSplits;
 
