@@ -38,15 +38,14 @@ const config: HardhatUserConfig = {
         url: `https://polygon-mainnet.g.alchemy.com/v2/${key}`,
       },
     },
-      //POLYGON MAINNET
-/*     polygon: {
+
+    polygon: {
       url: `https://polygon-mainnet.g.alchemy.com/v2/${key}`,
       accounts: [pKey],
     }, */
   },
 
-    //ETHERSCAN
-/*   etherscan: {
+  etherscan: {
     apiKey: process.env.POLYGONSCAN_KEY,
   }, */
 };

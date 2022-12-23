@@ -45,8 +45,9 @@ contract GenesisIndex is ERC20, Ownable, Pausable, ChainId, NGISplitter {
         uint256 amountIn,
         uint256 optimization
     ) public whenNotPaused returns (uint256 shares) {
-        require(optimization < 6, "optimization >= 6");
+        require(optimization < 5, "optimization >= 5");
         require(tokenIn < 3, "token >=3");
+        require(amountIn > 0 , "dx=0");
         uint256 dywBtc;
         uint256 dywEth;
         uint256 i = tokenIn;
@@ -80,34 +81,38 @@ contract GenesisIndex is ERC20, Ownable, Pausable, ChainId, NGISplitter {
     /**
     @notice function to by 74% wBTC and 26% wETH with usdc choosing a custom AMM split, previously calculated off-chain
     @param tokenIn : the token to deposit, must be a component of the index(0,1,2)
-    @param splits : amounts to exchange in each exchange [curve, uniswapv3, uniswapv2, balancer, sushiswap, quickswap]
+    @param amountIn : amount of the token to deposit
+    @param percentagesWBTCSplit : percentages of the token to exchange in each dex to buy WBTC
+    @param percentagesWETHSplit : percentages of the token to exchange in each dex to buy WETH
     @return shares : amount of minted tokens
      */
 
 
-    function depositCustom(uint256 tokenIn, uint256[5] memory splits)
+    function depositCustom(uint256 tokenIn, uint256 amountIn, uint256[5] calldata percentagesWBTCSplit, uint256[5] calldata percentagesWETHSplit)
         external
         whenNotPaused
         returns (uint256 shares)
     {
         uint256 i = tokenIn;
         require(i < 3);
-        uint256 t = _getTotal(splits);
-        require(tokenIn >= t ,"amount>tokenIn");
+        require(amountIn > 0 , "dx=0");
+        require(_getTotal(percentagesWBTCSplit)==10000 && _getTotal(percentagesWETHSplit)==10000, "!=100%");
         TransferHelper.safeTransferFrom(
             tokens[i],
             msg.sender,
             address(this),
-            t
+            amountIn
         );
         
-        approveAMM(i, t, 5);
+        approveAMM(i, amountIn, 5);
+        uint256 amountForBtc = amountIn * 7400 / 10000;
+        uint256 amountForEth = amountIn * 2600 / 10000;
         uint256[5] memory splitsForBtc;
         uint256[5] memory splitsForEth;
 
         for(uint256 index=0; index<5;){
-            splitsForBtc[index] = splits[index] * 7400/10000;
-            splitsForEth[index] = splits[index] * 2600/10000;
+            splitsForBtc[index] = amountForBtc * percentagesWBTCSplit[index] / 10000;
+            splitsForEth[index] = amountForEth * percentagesWETHSplit[index] / 10000;
             unchecked {
                 ++index;
             }
@@ -119,7 +124,7 @@ contract GenesisIndex is ERC20, Ownable, Pausable, ChainId, NGISplitter {
         _mint(
             msg.sender,
             shares =
-                (dywBtc * multipliers[1] * getLatestPrice(1) +dywEth * multipliers[2] *  getLatestPrice(2)  ) / getVirtualPrice()
+                (dywBtc * multipliers[1] * getLatestPrice(1) + dywEth * multipliers[2] *  getLatestPrice(2)  ) / getVirtualPrice()
         );
         emit Mint(msg.sender, dywBtc, dywEth, shares);
     }
@@ -138,11 +143,15 @@ contract GenesisIndex is ERC20, Ownable, Pausable, ChainId, NGISplitter {
         whenNotPaused
         returns (uint256 usdcOut)
     {   
+        require(ngiIn > 0 , "dx=0");
         require(optimization < 5, "optimization >= 5");
+
+        uint256 balanceWBtc = IERC20(tokens[1]).balanceOf(address(this));
+        uint256 balanceWEth = IERC20(tokens[2]).balanceOf(address(this));
+        uint256 wBtcIn = balanceWBtc * ngiIn / totalSupply();
+        uint256 wEthIn = balanceWEth * ngiIn / totalSupply();
+
         _burn(msg.sender, ngiIn);
-        uint256 usdcIn = getVirtualPrice() * ngiIn;
-        uint256 wBtcIn = (usdcIn * 7400 / 10000) / getLatestPrice(1) /multipliers[1];
-        uint256 wEthIn = (usdcIn * 2600 / 10000) / getLatestPrice(2) /multipliers[2];
         approveAMM(1, wBtcIn, optimization + 1);
         approveAMM(2, wEthIn, optimization + 1);
         TransferHelper.safeTransfer(
@@ -150,25 +159,40 @@ contract GenesisIndex is ERC20, Ownable, Pausable, ChainId, NGISplitter {
             msg.sender,
             usdcOut = swapWithParams(1, 0, wBtcIn, optimization + 1) + swapWithParams(2, 0, wEthIn, optimization + 1)
         );
-        emit Burn(msg.sender, usdcOut, ngiIn);
+        emit Burn(msg.sender, usdcOut, ngiIn); 
     }
 
-    function withdrawUsdcCustom(uint256 ngiIn, uint256[5] memory splitswBtc, uint256[5] memory splitswEth) 
+    function withdrawUsdcCustom(uint256 ngiIn, uint256[5] calldata percentagesWBTCSplit, uint256[5] calldata percentagesWETHSplit) 
         external 
         whenNotPaused 
         returns(uint256 usdcOut)
     {
-        uint256 usdcIn = getVirtualPrice() * ngiIn;
-        uint256 wBtcIn = (usdcIn * 7400 / 10000) / getLatestPrice(1) /multipliers[1];
-        uint256 wEthIn = (usdcIn * 2600 / 10000) / getLatestPrice(2) /multipliers[2];
-        require(_getTotal(splitswBtc) <= wBtcIn && _getTotal(splitswEth) <= wEthIn, "invalid amount");
+        require(ngiIn > 0 , "dx=0");
+        require(_getTotal(percentagesWBTCSplit) == 10000 && _getTotal(percentagesWETHSplit) == 10000, "!=100%");
         _burn(msg.sender, ngiIn);
-        approveAMM(1, wBtcIn, 6);
-        approveAMM(1, wEthIn, 6);
+
+        uint256 balanceWBtc = IERC20(tokens[1]).balanceOf(address(this));
+        uint256 balanceWEth = IERC20(tokens[2]).balanceOf(address(this));
+        uint256 wBtcIn = balanceWBtc * ngiIn / totalSupply();
+        uint256 wEthIn = balanceWEth * ngiIn / totalSupply();
+        
+        uint256[5] memory btcSplits;
+        uint256[5] memory ethSplits;
+
+        for(uint256 index=0; index<5;){
+            btcSplits[index] = wBtcIn * percentagesWBTCSplit[index] / 10000;
+            ethSplits[index] = wEthIn * percentagesWETHSplit[index] / 10000;
+            unchecked {
+                ++index;
+            }
+        }
+
+        approveAMM(1, wBtcIn, 5);
+        approveAMM(2, wEthIn, 5);
         TransferHelper.safeTransfer(
             tokens[0],
             msg.sender,
-            usdcOut = swapWithParamsCustom(1, 0, splitswBtc) + swapWithParamsCustom(2, 0, splitswEth)
+            usdcOut = swapWithParamsCustom(1, 0, btcSplits) + swapWithParamsCustom(2, 0, ethSplits)
         );
         emit Burn(msg.sender, usdcOut, ngiIn);
     }
@@ -180,10 +204,13 @@ contract GenesisIndex is ERC20, Ownable, Pausable, ChainId, NGISplitter {
     {
         uint256 len = _params.length;
         uint256 total = 0;
-        for (uint256 i = 0; i < len; i++) {
+        for (uint256 i = 0; i < len;) {
             uint256 n = _params[i];
             if (n != 0) {
                 total += n;
+            }
+            unchecked {
+                ++i;
             }
         }
         return total;
