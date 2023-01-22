@@ -5,7 +5,7 @@ Created by @Nebula.fi
 wBTC-wETH
  */
 
-import "hardhat/console.sol";
+// import "hardhat/console.sol";
 pragma solidity ^0.8.7;
 import "../../utils/ChainId.sol";
 import "./NGISplitter.sol";
@@ -37,7 +37,7 @@ contract GenesisIndex is ERC20, Ownable, Pausable, ChainId, NGISplitter {
     @notice function to buy 74% wBTC and 26% wETH with usdc
     @param tokenIn : the token to deposit, must be a component of the index(0,1,2)
     @param amountIn : token amount to deposit
-    @param optimization: level of slippage optimization, from 0 to 2 
+    @param optimization: level of slippage optimization, from 0 to 4 
     @return shares : amount of minted tokens
      */
     function deposit(
@@ -132,10 +132,7 @@ contract GenesisIndex is ERC20, Ownable, Pausable, ChainId, NGISplitter {
     /**
     @notice Function to liquidate wETH and wBTC positions for usdc
     @param ngiIn : the number of indexed tokens to burn 
-    @param optimization: true to apply slippage optimization, false else
-    @dev to calculate the amount of usdc we get after the swap,
-    we fetch contract's balance first and after the swap so the difference is 
-    the amount gotten after slippage. The fee goes to devs'balance
+    @param optimization: level of slippage optimization, from 0 to 4
     @return usdcOut : final usdc amount to withdraw after slippage and 1% fee
      */
     function withdrawUsdc(uint256 ngiIn, uint256 optimization)
@@ -238,7 +235,7 @@ contract GenesisIndex is ERC20, Ownable, Pausable, ChainId, NGISplitter {
     /////////////////////
 
     //ONLY FOR TESTING
-    function test_uni_v3(
+    /* function test_uni_v3(
         uint256 i ,
         uint256 j,
         uint256 dx
@@ -353,7 +350,7 @@ contract GenesisIndex is ERC20, Ownable, Pausable, ChainId, NGISplitter {
         TransferHelper.safeTransfer(tokens[j], msg.sender, dy);
     }
 
-   
+    */
 
   
    

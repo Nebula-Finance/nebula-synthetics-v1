@@ -10,32 +10,32 @@ import "../../interfaces/ICurvePool.sol";
 import "./PriceConsumerNGI.sol";
 
 contract NGISplitter is PriceConsumerNGI {
-    uint256 constant  MAX_INT_NUMBER = 115792089237316195423570985008687907853269984665640564039457584007913129639935;
+    uint256 private constant  MAX_INT_NUMBER = 115792089237316195423570985008687907853269984665640564039457584007913129639935;
     address[3] public  tokens = [
         0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174, //[0] => USDC
         0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6, //[1] => wBTC
         0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619 // [2] => wETH
     ];
-    uint40[3] multipliers = [1e12, 1e10, 1];
-    uint16[3] marketCapWeigth = [0, 7400, 2600];
+    uint40[3] private multipliers = [1e12, 1e10, 1];
+    uint16[3] private marketCapWeigth = [0, 7400, 2600];
 
-    ICurvePool constant crv = 
+    ICurvePool private constant crv = 
         ICurvePool(0x3FCD5De6A9fC8A99995c406c77DDa3eD7E406f81); // CURVE 
 
-    ISwapRouter constant uniV3 =
+    ISwapRouter private constant uniV3 =
         ISwapRouter(0xE592427A0AEce92De3Edee1F18E0157C05861564); // UNISWAPv3 
 
-    IUniswapV2Router02 constant quick = 
+    IUniswapV2Router02 private constant quick = 
         IUniswapV2Router02(0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff); //QUICKSWAP
 
-    IUniswapV2Router02 constant sushi = 
+    IUniswapV2Router02 private constant sushi = 
         IUniswapV2Router02(0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506) ;//SUSHISWAP 
 
-    IVaultBalancer constant bal =
+    IVaultBalancer private constant bal =
         IVaultBalancer(0xBA12222222228d8Ba445958a75a0704d566BF2C8); // BALANCER 
 
 
-    address[5]  addressRouting = [
+    address[5] private addressRouting = [
         address(crv),
         address(uniV3),
         address(quick),
@@ -116,7 +116,7 @@ contract NGISplitter is PriceConsumerNGI {
         uint256 _i,
         uint256 _j,
         uint256 _dx
-    )internal returns(uint256){
+    )private returns(uint256){
         if(_dx == 0 ){
             return 0;
         }
@@ -136,7 +136,7 @@ contract NGISplitter is PriceConsumerNGI {
         address _i,
         address _j,
         uint256 _dx
-    ) internal returns (uint256) {
+    ) private returns (uint256) {
         return
             _dx == 0 ? 0 
             : _i == _j ? _dx
@@ -159,7 +159,7 @@ contract NGISplitter is PriceConsumerNGI {
         address _i,
         address _j,
         uint256 _dx
-    ) internal returns (uint256) {
+    ) private returns (uint256) {
         if (_i == _j) {
             return _dx;
         }
@@ -190,7 +190,7 @@ contract NGISplitter is PriceConsumerNGI {
         address _i,
         address _j,
         uint256 _dx
-    ) internal returns (uint256){
+    ) private returns (uint256){
         address[] memory route = new address[](2);
         route[0] = _i;
         route[1] = _j;
@@ -207,7 +207,7 @@ contract NGISplitter is PriceConsumerNGI {
         address _i,
         address _j,
         uint256 _dx
-    ) internal returns (uint256){
+    ) private returns (uint256){
         address[] memory route = new address[](2);
         route[0] = _i;
         route[1] = _j;
@@ -219,7 +219,7 @@ contract NGISplitter is PriceConsumerNGI {
 
     
 
-    function _getUnderlying(uint256 n) internal pure returns(uint256){
+    function _getUnderlying(uint256 n) private pure returns(uint256){
         return n==0 ? 1 : n==1 ? 3 :  4;
     }
 
