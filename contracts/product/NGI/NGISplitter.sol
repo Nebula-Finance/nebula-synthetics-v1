@@ -10,13 +10,13 @@ import "../../interfaces/ICurvePool.sol";
 import "./PriceConsumerNGI.sol";
 
 contract NGISplitter is PriceConsumerNGI {
-    uint256 private constant  MAX_INT_NUMBER = 115792089237316195423570985008687907853269984665640564039457584007913129639935;
+    uint256 private constant  MAX_UINT_NUMBER = 115792089237316195423570985008687907853269984665640564039457584007913129639935;
     address[3] public  tokens = [
         0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174, //[0] => USDC
         0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6, //[1] => wBTC
         0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619 // [2] => wETH
     ];
-    uint40[3] private multipliers = [1e12, 1e10, 1];
+    uint40[3]  multipliers = [1e12, 1e10, 1];
     uint16[3] private marketCapWeigth = [0, 7400, 2600];
 
     ICurvePool private constant crv = 
@@ -104,7 +104,7 @@ contract NGISplitter is PriceConsumerNGI {
         for (uint256 i = 0; i < s;) {
             address dex = addressRouting[i];
             if(token.allowance(msg.sender, dex)<_amount){
-                token.approve(dex, MAX_INT_NUMBER );
+                token.approve(dex, MAX_UINT_NUMBER );
             }
             unchecked {
                 ++i;

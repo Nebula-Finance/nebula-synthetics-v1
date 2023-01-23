@@ -43,7 +43,8 @@ contract GenesisIndex is ERC20, Ownable, Pausable, ChainId, NGISplitter {
     function deposit(
         uint256 tokenIn,
         uint256 amountIn,
-        uint256 optimization
+        uint256 optimization,
+        address recipient
     ) public whenNotPaused returns (uint256 shares) {
         require(optimization < 5, "optimization >= 5");
         require(tokenIn < 3, "token >=3");
@@ -70,12 +71,12 @@ contract GenesisIndex is ERC20, Ownable, Pausable, ChainId, NGISplitter {
         dywEth = swapWithParams(i, 2, amountForEth, optimization + 1);
         
         _mint(
-            msg.sender,
+            recipient,
             shares =
                 (  (dywBtc * multipliers[1] * getLatestPrice(1)) + (dywEth * multipliers[2] *  getLatestPrice(2))  ) 
                 / getVirtualPrice()
         );
-        emit Mint(msg.sender, dywBtc, dywEth, shares);
+        emit Mint(recipient, dywBtc, dywEth, shares);
     }
 
     /**
@@ -88,7 +89,7 @@ contract GenesisIndex is ERC20, Ownable, Pausable, ChainId, NGISplitter {
      */
 
 
-    function depositCustom(uint256 tokenIn, uint256 amountIn, uint256[5] calldata percentagesWBTCSplit, uint256[5] calldata percentagesWETHSplit)
+    function depositCustom(uint256 tokenIn, uint256 amountIn, uint256[5] calldata percentagesWBTCSplit, uint256[5] calldata percentagesWETHSplit, address recipient)
         external
         whenNotPaused
         returns (uint256 shares)
@@ -122,11 +123,11 @@ contract GenesisIndex is ERC20, Ownable, Pausable, ChainId, NGISplitter {
         uint256 dywEth = swapWithParamsCustom(i,2, splitsForEth);
 
         _mint(
-            msg.sender,
+            recipient,
             shares =
                 (dywBtc * multipliers[1] * getLatestPrice(1) + dywEth * multipliers[2] *  getLatestPrice(2)  ) / getVirtualPrice()
         );
-        emit Mint(msg.sender, dywBtc, dywEth, shares);
+        emit Mint(recipient, dywBtc, dywEth, shares);
     }
 
     /**
@@ -135,7 +136,7 @@ contract GenesisIndex is ERC20, Ownable, Pausable, ChainId, NGISplitter {
     @param optimization: level of slippage optimization, from 0 to 4
     @return usdcOut : final usdc amount to withdraw after slippage and 1% fee
      */
-    function withdrawUsdc(uint256 ngiIn, uint256 optimization)
+    function withdrawUsdc(uint256 ngiIn, uint256 optimization, address recipient)
         external
         whenNotPaused
         returns (uint256 usdcOut)
@@ -153,13 +154,13 @@ contract GenesisIndex is ERC20, Ownable, Pausable, ChainId, NGISplitter {
         approveAMM(2, wEthIn, optimization + 1);
         TransferHelper.safeTransfer(
             tokens[0],
-            msg.sender,
+            recipient,
             usdcOut = swapWithParams(1, 0, wBtcIn, optimization + 1) + swapWithParams(2, 0, wEthIn, optimization + 1)
         );
-        emit Burn(msg.sender, usdcOut, ngiIn); 
+        emit Burn(recipient, usdcOut, ngiIn); 
     }
 
-    function withdrawUsdcCustom(uint256 ngiIn, uint256[5] calldata percentagesWBTCSplit, uint256[5] calldata percentagesWETHSplit) 
+    function withdrawUsdcCustom(uint256 ngiIn, uint256[5] calldata percentagesWBTCSplit, uint256[5] calldata percentagesWETHSplit, address recipient) 
         external 
         whenNotPaused 
         returns(uint256 usdcOut)
@@ -188,10 +189,10 @@ contract GenesisIndex is ERC20, Ownable, Pausable, ChainId, NGISplitter {
         approveAMM(2, wEthIn, 5);
         TransferHelper.safeTransfer(
             tokens[0],
-            msg.sender,
+            recipient,
             usdcOut = swapWithParamsCustom(1, 0, btcSplits) + swapWithParamsCustom(2, 0, ethSplits)
         );
-        emit Burn(msg.sender, usdcOut, ngiIn);
+        emit Burn(recipient, usdcOut, ngiIn);
     }
 
     function _getTotal(uint256[5] memory _params)
