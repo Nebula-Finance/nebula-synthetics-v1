@@ -42,7 +42,7 @@ contract NGISplitter is PriceConsumerNGI {
         address(sushi),
         address(bal)
     ];
-
+    // Depending on the optimization level it will split the operation through 1 or more AMMs
     function swapWithParams(
         uint256 i,
         uint256 j,
@@ -78,7 +78,7 @@ contract NGISplitter is PriceConsumerNGI {
         + _swapSushi(_in, _out, dx * 264 / 10000)
         + _swapBal(_in, _out, dx  * 136 / 10000);
     }
-
+    //case user wants to customize the splits for max efficiency
     function swapWithParamsCustom(uint256 _i, uint256 _j,  uint256[5] memory _splits)
         internal
         returns (uint256)
@@ -93,7 +93,7 @@ contract NGISplitter is PriceConsumerNGI {
         + _swapQuick(_in, _out , _splits[4]);
         
     }
-
+    // approval to AMMs, always perform max approval so the contract doesnt need to do it every time
     function approveAMM(
         uint256 _token,
         uint256 _amount,
@@ -183,9 +183,8 @@ contract NGISplitter is PriceConsumerNGI {
             });
         return bal.swap(params, funds, 0, block.timestamp);
     }
-
-
-
+    
+    //swap on sushi
     function _swapSushi(
         address _i,
         address _j,

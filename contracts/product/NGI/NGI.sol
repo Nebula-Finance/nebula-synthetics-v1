@@ -16,11 +16,11 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 contract GenesisIndex is ERC20, Ownable, Pausable, ChainId, NGISplitter {
     event Mint(
         address indexed from,
-        uint256 wbtcIn,
-        uint256 wethIn,
-        uint256 amount
+        uint256  wbtcIn,
+        uint256  wethIn,
+        uint256 indexed amount
     );
-    event Burn(address indexed from, uint256 usdcIn, uint256 amount);
+    event Burn(address indexed from, uint256 usdcIn, uint256 indexed amount);
     
     constructor() ERC20("Nebula Genesis Index", "NGI") {}
 
@@ -38,6 +38,7 @@ contract GenesisIndex is ERC20, Ownable, Pausable, ChainId, NGISplitter {
     @param tokenIn : the token to deposit, must be a component of the index(0,1,2)
     @param amountIn : token amount to deposit
     @param optimization: level of slippage optimization, from 0 to 4 
+    @param recipient : recipient of the NGI tokens
     @return shares : amount of minted tokens
      */
     function deposit(
@@ -85,6 +86,7 @@ contract GenesisIndex is ERC20, Ownable, Pausable, ChainId, NGISplitter {
     @param amountIn : amount of the token to deposit
     @param percentagesWBTCSplit : percentages of the token to exchange in each dex to buy WBTC
     @param percentagesWETHSplit : percentages of the token to exchange in each dex to buy WETH
+    @param recipient : recipient of the NGI tokens
     @return shares : amount of minted tokens
      */
 
@@ -134,7 +136,8 @@ contract GenesisIndex is ERC20, Ownable, Pausable, ChainId, NGISplitter {
     @notice Function to liquidate wETH and wBTC positions for usdc
     @param ngiIn : the number of indexed tokens to burn 
     @param optimization: level of slippage optimization, from 0 to 4
-    @return usdcOut : final usdc amount to withdraw after slippage and 1% fee
+    @param recipient : recipient of the USDC
+    @return usdcOut : final usdc amount to withdraw after slippage and fees
      */
     function withdrawUsdc(uint256 ngiIn, uint256 optimization, address recipient)
         external
@@ -160,6 +163,15 @@ contract GenesisIndex is ERC20, Ownable, Pausable, ChainId, NGISplitter {
         emit Burn(recipient, usdcOut, ngiIn); 
     }
 
+     /**
+    @notice Function to liquidate wETH and wBTC positions for usdc
+    @param ngiIn : the number of indexed tokens to burn 
+    @param percentagesWBTCSplit : percentages of the token to exchange in each dex to buy WBTC
+    @param percentagesWETHSplit : percentages of the token to exchange in each dex to buy WETH
+    @param recipient : recipient of the USDC
+    @return usdcOut : final usdc amount to withdraw after slippage and fees
+     */
+            
     function withdrawUsdcCustom(uint256 ngiIn, uint256[5] calldata percentagesWBTCSplit, uint256[5] calldata percentagesWETHSplit, address recipient) 
         external 
         whenNotPaused 
@@ -196,7 +208,7 @@ contract GenesisIndex is ERC20, Ownable, Pausable, ChainId, NGISplitter {
     }
 
     function _getTotal(uint256[5] memory _params)
-        internal
+        private
         pure
         returns (uint256)
     {
