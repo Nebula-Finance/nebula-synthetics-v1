@@ -79,7 +79,7 @@ contract GenesisIndex is ERC20, Ownable, Pausable, ChainId, NGISplitter {
     }
 
     /**
-    @notice function to by 74% wBTC and 26% wETH with usdc choosing a custom AMM split, previously calculated off-chain
+    @notice function to buy 74% wBTC and 26% wETH with usdc choosing a custom AMM split, previously calculated off-chain
     @param tokenIn : the token to deposit, must be a component of the index(0,1,2)
     @param amountIn : amount of the token to deposit
     @param percentagesWBTCSplit : percentages of the token to exchange in each dex to buy WBTC

@@ -39,12 +39,12 @@ const config: HardhatUserConfig = {
       },
     },
 
-    polygon: {
+ /*   polygon: {
       url: `https://polygon-mainnet.g.alchemy.com/v2/${key}`,
       accounts: [pKey],
     }, */
   },
-
+/*
   etherscan: {
     apiKey: process.env.POLYGONSCAN_KEY,
   }, */
