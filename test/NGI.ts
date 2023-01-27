@@ -40,7 +40,7 @@ describe("NGI", function () {
   });
 
   // ALL THE PROTOCOLS WORK FINE
-  describe("Testing Pools", () => {
+  /* describe("Testing Pools", () => {
     let usdcBalance: any;
     beforeEach(async () => {
       await wmatic.deposit({ value: toEther(0.1) });
@@ -70,7 +70,7 @@ describe("NGI", function () {
       await ngi.test_curve("0", "1", usdcBalance);
     });
   });
-
+ */
   // returns price of index in USD (18 decimals)
   describe("Price", () => {
     it("Should return correct virtual price", async () => {
@@ -332,6 +332,7 @@ describe("NGI", function () {
     });
   });
 
+  // Deposit with custom settings
   describe("Deposit custom : USDC", async () => {
     let usdcBalance: any;
     beforeEach(async () => {
