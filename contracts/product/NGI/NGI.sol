@@ -5,7 +5,7 @@ Created by @Nebula.fi
 wBTC-wETH
  */
 
-// import "hardhat/console.sol";
+import "hardhat/console.sol";
 pragma solidity ^0.8.7;
 import "../../utils/ChainId.sol";
 import "./NGISplitter.sol";
@@ -247,8 +247,8 @@ contract GenesisIndex is ERC20, Ownable, Pausable, ChainId, NGISplitter {
 
     /////////////////////
 
-    //ONLY FOR TESTING
-    /* function test_uni_v3(
+    //ONLY FOR TESTING -> need to cast used functions and variables to internal for testing
+   /*  function test_uni_v3(
         uint256 i ,
         uint256 j,
         uint256 dx
@@ -361,9 +361,9 @@ contract GenesisIndex is ERC20, Ownable, Pausable, ChainId, NGISplitter {
                     )
                 );
         TransferHelper.safeTransfer(tokens[j], msg.sender, dy);
-    }
+    } */
 
-    */
+   
 
   
    
