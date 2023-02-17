@@ -1,119 +1,129 @@
 // SPDX-License-Identifier: MIT
 
 /**
-Created by @Nebula.fi
-wBTC-wETH
+ * @author : Nebula.fi
+ * wBTC-wETH
  */
 
-import "hardhat/console.sol";
 pragma solidity ^0.8.7;
 import "../../utils/ChainId.sol";
 import "./NGISplitter.sol";
-import "@openzeppelin/contracts/security/Pausable.sol";
-import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "hardhat/console.sol";
+import "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol";
+import "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol";
 
-contract GenesisIndex is ERC20, Ownable, Pausable, ChainId, NGISplitter {
-    event Mint(
-        address indexed from,
-        uint256  wbtcIn,
-        uint256  wethIn,
-        uint256 indexed amount
-    );
+contract GenesisIndex is ERC20Upgradeable, OwnableUpgradeable, PausableUpgradeable, ChainId, NGISplitter {
+    event Mint(address indexed from, uint256 wbtcIn, uint256 wethIn, uint256 indexed amount);
     event Burn(address indexed from, uint256 usdcIn, uint256 indexed amount);
-    
-    constructor() ERC20("Nebula Genesis Index", "NGI") {}
 
-    /**
-    @notice Returns the price of the index
-    wETH/usdc * 0.26 + wBTC/usdc * 0.74
-     */
-    function getVirtualPrice() public view returns (uint256) {
-        return (((getLatestPrice(1) * 7400) / 10000) +
-            ((getLatestPrice(2) * 2600) / 10000));
+    /// @custom:oz-upgrades-unsafe-allow constructor
+    constructor () {
+        _disableInitializers();
+    }
+
+
+
+    function initialize() public initializer{
+        __ERC20_init("Nebula Genesis Index", "NGI");
+        __Ownable_init();
+        __Pausable_init();
+        tokens = [
+            0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174, //[0] => USDC
+            0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6, //[1] => wBTC
+            0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619 // [2] => wETH
+        ];
+        multipliers = [1e12, 1e10, 1];
+        marketCapWeigth = [0, 7400, 2600];
+        crv = ICurvePool(0x3FCD5De6A9fC8A99995c406c77DDa3eD7E406f81); // CURVE
+        uniV3 = ISwapRouter(0xE592427A0AEce92De3Edee1F18E0157C05861564); // UNISWAPv3
+        quick = IUniswapV2Router02(0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff); //QUICKSWAP
+        sushi = IUniswapV2Router02(0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506); //SUSHISWAP
+        bal = IVaultBalancer(0xBA12222222228d8Ba445958a75a0704d566BF2C8); // BALANCER
+        addressRouting = [0x3FCD5De6A9fC8A99995c406c77DDa3eD7E406f81, 0xE592427A0AEce92De3Edee1F18E0157C05861564, 0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff,0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506, 0xBA12222222228d8Ba445958a75a0704d566BF2C8];
+        priceFeeds = [
+            AggregatorV3Interface(0xfE4A8cc5b5B2366C1B58Bea3858e81843581b2F7),
+            AggregatorV3Interface(0xDE31F8bFBD8c84b5360CFACCa3539B938dd78ae6),
+            AggregatorV3Interface(0xF9680D99D6C9589e2a93a78A04A279e509205945)
+        ];
+       
+
     }
 
     /**
-    @notice function to buy 74% wBTC and 26% wETH with usdc
-    @param tokenIn : the token to deposit, must be a component of the index(0,1,2)
-    @param amountIn : token amount to deposit
-    @param optimization: level of slippage optimization, from 0 to 4 
-    @param recipient : recipient of the NGI tokens
-    @return shares : amount of minted tokens
+     * @notice Returns the price of the index
+     * wETH/usdc * 0.26 + wBTC/usdc * 0.74
      */
-    function deposit(
-        uint256 tokenIn,
-        uint256 amountIn,
-        uint256 optimization,
-        address recipient
-    ) public whenNotPaused returns (uint256 shares) {
+    function getVirtualPrice() public view returns (uint256) {
+        return (((getLatestPrice(1) * 7400) / 10000) + ((getLatestPrice(2) * 2600) / 10000));
+    }
+
+    /**
+     * @notice function to buy 74% wBTC and 26% wETH with usdc
+     * @param tokenIn : the token to deposit, must be a component of the index(0,1,2)
+     * @param amountIn : token amount to deposit
+     * @param optimization: level of slippage optimization, from 0 to 4 
+     * @param recipient : recipient of the NGI tokens
+     * @return shares : amount of minted tokens
+     */
+    function deposit(uint8 tokenIn, uint256 amountIn, uint8 optimization, address recipient)
+        public
+        whenNotPaused
+        returns (uint256 shares)
+    {
         require(optimization < 5, "optimization >= 5");
         require(tokenIn < 3, "token >=3");
-        require(amountIn > 0 , "dx=0");
+        require(amountIn > 0, "dx=0");
         uint256 dywBtc;
         uint256 dywEth;
-        uint256 i = tokenIn;
+        uint8 i = tokenIn;
 
-        TransferHelper.safeTransferFrom(
-            tokens[i],
-            msg.sender,
-            address(this),
-            amountIn
-        );
-        
+        TransferHelper.safeTransferFrom(tokens[i], msg.sender, address(this), amountIn);
 
-        (uint256 amountForBtc, uint256 amountForEth) = (
-            (amountIn * 7400) / 10000,
-            (amountIn * 2600) / 10000
-        );
+        (uint256 amountForBtc, uint256 amountForEth) = ((amountIn * 7400) / 10000, (amountIn * 2600) / 10000);
 
         approveAMM(i, amountIn, optimization + 1);
         dywBtc = swapWithParams(i, 1, amountForBtc, optimization + 1);
         dywEth = swapWithParams(i, 2, amountForEth, optimization + 1);
-        
+
         _mint(
             recipient,
-            shares =
-                (  (dywBtc * multipliers[1] * getLatestPrice(1)) + (dywEth * multipliers[2] *  getLatestPrice(2))  ) 
+            shares = ((dywBtc * multipliers[1] * getLatestPrice(1)) + (dywEth * multipliers[2] * getLatestPrice(2)))
                 / getVirtualPrice()
         );
         emit Mint(recipient, dywBtc, dywEth, shares);
     }
 
     /**
-    @notice function to buy 74% wBTC and 26% wETH with usdc choosing a custom AMM split, previously calculated off-chain
-    @param tokenIn : the token to deposit, must be a component of the index(0,1,2)
-    @param amountIn : amount of the token to deposit
-    @param percentagesWBTCSplit : percentages of the token to exchange in each dex to buy WBTC
-    @param percentagesWETHSplit : percentages of the token to exchange in each dex to buy WETH
-    @param recipient : recipient of the NGI tokens
-    @return shares : amount of minted tokens
+     * @notice function to buy 74% wBTC and 26% wETH with usdc choosing a custom AMM split, previously calculated off-chain
+     * @param tokenIn : the token to deposit, must be a component of the index(0,1,2)
+     * @param amountIn : amount of the token to deposit
+     * @param percentagesWBTCSplit : percentages of the token to exchange in each dex to buy WBTC
+     * @param percentagesWETHSplit : percentages of the token to exchange in each dex to buy WETH
+     * @param recipient : recipient of the NGI tokens
+     * @return shares : amount of minted tokens
      */
 
-
-    function depositCustom(uint256 tokenIn, uint256 amountIn, uint256[5] calldata percentagesWBTCSplit, uint256[5] calldata percentagesWETHSplit, address recipient)
-        external
-        whenNotPaused
-        returns (uint256 shares)
-    {
-        uint256 i = tokenIn;
+    function depositCustom(
+        uint8 tokenIn,
+        uint256 amountIn,
+        uint16[5] calldata percentagesWBTCSplit,
+        uint16[5] calldata percentagesWETHSplit,
+        address recipient
+    ) external whenNotPaused returns (uint256 shares) {
+        uint8 i = tokenIn;
         require(i < 3);
-        require(amountIn > 0 , "dx=0");
-        require(_getTotal(percentagesWBTCSplit)==10000 && _getTotal(percentagesWETHSplit)==10000, "!=100%");
-        TransferHelper.safeTransferFrom(
-            tokens[i],
-            msg.sender,
-            address(this),
-            amountIn
-        );
-        
+        require(amountIn > 0, "dx=0");
+        require(_getTotal(percentagesWBTCSplit) == 10000 && _getTotal(percentagesWETHSplit) == 10000, "!=100%");
+        TransferHelper.safeTransferFrom(tokens[i], msg.sender, address(this), amountIn);
+
         approveAMM(i, amountIn, 5);
         uint256 amountForBtc = amountIn * 7400 / 10000;
         uint256 amountForEth = amountIn * 2600 / 10000;
         uint256[5] memory splitsForBtc;
         uint256[5] memory splitsForEth;
 
-        for(uint256 index=0; index<5;){
+        for (uint256 index = 0; index < 5;) {
             splitsForBtc[index] = amountForBtc * percentagesWBTCSplit[index] / 10000;
             splitsForEth[index] = amountForEth * percentagesWETHSplit[index] / 10000;
             unchecked {
@@ -121,30 +131,30 @@ contract GenesisIndex is ERC20, Ownable, Pausable, ChainId, NGISplitter {
             }
         }
 
-        uint256 dywBtc = swapWithParamsCustom(i,1, splitsForBtc);
-        uint256 dywEth = swapWithParamsCustom(i,2, splitsForEth);
+        uint256 dywBtc = swapWithParamsCustom(i, 1, splitsForBtc);
+        uint256 dywEth = swapWithParamsCustom(i, 2, splitsForEth);
 
         _mint(
             recipient,
-            shares =
-                (dywBtc * multipliers[1] * getLatestPrice(1) + dywEth * multipliers[2] *  getLatestPrice(2)  ) / getVirtualPrice()
+            shares = (dywBtc * multipliers[1] * getLatestPrice(1) + dywEth * multipliers[2] * getLatestPrice(2))
+                / getVirtualPrice()
         );
         emit Mint(recipient, dywBtc, dywEth, shares);
     }
 
     /**
-    @notice Function to liquidate wETH and wBTC positions for usdc
-    @param ngiIn : the number of indexed tokens to burn 
-    @param optimization: level of slippage optimization, from 0 to 4
-    @param recipient : recipient of the USDC
-    @return usdcOut : final usdc amount to withdraw after slippage and fees
+     * @notice Function to liquidate wETH and wBTC positions for usdc
+     * @param ngiIn : the number of indexed tokens to burn 
+     * @param optimization: level of slippage optimization, from 0 to 4
+     * @param recipient : recipient of the USDC
+     * @return usdcOut : final usdc amount to withdraw after slippage and fees
      */
-    function withdrawUsdc(uint256 ngiIn, uint256 optimization, address recipient)
+    function withdrawUsdc(uint256 ngiIn, uint8 optimization, address recipient)
         external
         whenNotPaused
         returns (uint256 usdcOut)
-    {   
-        require(ngiIn > 0 , "dx=0");
+    {
+        require(ngiIn > 0, "dx=0");
         require(optimization < 5, "optimization >= 5");
 
         uint256 balanceWBtc = IERC20(tokens[1]).balanceOf(address(this));
@@ -160,42 +170,42 @@ contract GenesisIndex is ERC20, Ownable, Pausable, ChainId, NGISplitter {
             recipient,
             usdcOut = swapWithParams(1, 0, wBtcIn, optimization + 1) + swapWithParams(2, 0, wEthIn, optimization + 1)
         );
-        emit Burn(recipient, usdcOut, ngiIn); 
+        emit Burn(recipient, usdcOut, ngiIn);
     }
 
-     /**
-    @notice Function to liquidate wETH and wBTC positions for usdc
-    @param ngiIn : the number of indexed tokens to burn 
-    @param percentagesWBTCSplit : percentages of the token to exchange in each dex to buy WBTC
-    @param percentagesWETHSplit : percentages of the token to exchange in each dex to buy WETH
-    @param recipient : recipient of the USDC
-    @return usdcOut : final usdc amount to withdraw after slippage and fees
+    /**
+     * @notice Function to liquidate wETH and wBTC positions for usdc
+     * @param ngiIn : the number of indexed tokens to burn 
+     * @param percentagesWBTCSplit : percentages of the token to exchange in each dex to buy WBTC
+     * @param percentagesWETHSplit : percentages of the token to exchange in each dex to buy WETH
+     * @param recipient : recipient of the USDC
+     * @return usdcOut : final usdc amount to withdraw after slippage and fees
      */
-            
-    function withdrawUsdcCustom(uint256 ngiIn, uint256[5] calldata percentagesWBTCSplit, uint256[5] calldata percentagesWETHSplit, address recipient) 
-        external 
-        whenNotPaused 
-        returns(uint256 usdcOut)
-    {
-        require(ngiIn > 0 , "dx=0");
+
+    function withdrawUsdcCustom(
+        uint256 ngiIn,
+        uint16[5] calldata percentagesWBTCSplit,
+        uint16[5] calldata percentagesWETHSplit,
+        address recipient
+    ) external whenNotPaused returns (uint256 usdcOut) {
+        require(ngiIn > 0, "dx=0");
         require(_getTotal(percentagesWBTCSplit) == 10000 && _getTotal(percentagesWETHSplit) == 10000, "!=100%");
-        _burn(msg.sender, ngiIn);
 
         uint256 balanceWBtc = IERC20(tokens[1]).balanceOf(address(this));
         uint256 balanceWEth = IERC20(tokens[2]).balanceOf(address(this));
         uint256 wBtcIn = balanceWBtc * ngiIn / totalSupply();
         uint256 wEthIn = balanceWEth * ngiIn / totalSupply();
-        
         uint256[5] memory btcSplits;
         uint256[5] memory ethSplits;
 
-        for(uint256 index=0; index<5;){
+        for (uint8 index = 0; index < 5;) {
             btcSplits[index] = wBtcIn * percentagesWBTCSplit[index] / 10000;
             ethSplits[index] = wEthIn * percentagesWETHSplit[index] / 10000;
             unchecked {
                 ++index;
             }
         }
+        _burn(msg.sender, ngiIn);
 
         approveAMM(1, wBtcIn, 5);
         approveAMM(2, wEthIn, 5);
@@ -207,15 +217,11 @@ contract GenesisIndex is ERC20, Ownable, Pausable, ChainId, NGISplitter {
         emit Burn(recipient, usdcOut, ngiIn);
     }
 
-    function _getTotal(uint256[5] memory _params)
-        private
-        pure
-        returns (uint256)
-    {
+    function _getTotal(uint16[5] memory _params) private pure returns (uint16) {
         uint256 len = _params.length;
-        uint256 total = 0;
-        for (uint256 i = 0; i < len;) {
-            uint256 n = _params[i];
+        uint16 total = 0;
+        for (uint8 i = 0; i < len;) {
+            uint16 n = _params[i];
             if (n != 0) {
                 total += n;
             }
@@ -225,11 +231,6 @@ contract GenesisIndex is ERC20, Ownable, Pausable, ChainId, NGISplitter {
         }
         return total;
     }
-
-
-    
-
-
 
     //////////////////////////////////
     // SPECIAL PERMISSION FUNCTIONS//
@@ -243,128 +244,5 @@ contract GenesisIndex is ERC20, Ownable, Pausable, ChainId, NGISplitter {
         _unpause();
     }
 
-   
-
-    /////////////////////
-
-    //ONLY FOR TESTING -> need to cast used functions and variables to internal for testing
-   /*  function test_uni_v3(
-        uint256 i ,
-        uint256 j,
-        uint256 dx
-    ) external {
-        TransferHelper.safeTransferFrom(
-            tokens[i],
-            msg.sender,
-            address(this),
-            dx
-        );
-        approveAMM(i, dx, 5);
-        uint256 dy = _swapUniV3(tokens[i], tokens[j], dx);
-        console.log(dy);
-        TransferHelper.safeTransfer(tokens[j], msg.sender, dy);
-    }
-
-  
-     function test_quick(
-        uint256 i ,
-        uint256 j,
-        uint256 dx
-    ) external {
-        TransferHelper.safeTransferFrom(
-            tokens[i],
-            msg.sender,
-            address(this),
-            dx
-        );
-        approveAMM(i, dx, 5);
-        uint256 dy = _swapQuick(tokens[i], tokens[j], dx);
-        console.log(dy);
-        TransferHelper.safeTransfer(tokens[j], msg.sender, dy);
-    }
-
-
-    function test_sushi(
-        uint256 i ,
-        uint256 j,
-        uint256 dx
-    ) external {
-        TransferHelper.safeTransferFrom(
-            tokens[i],
-            msg.sender,
-            address(this),
-            dx
-        );
-        approveAMM(i, dx, 5);
-        uint256 dy = _swapSushi(tokens[i], tokens[j], dx);
-        console.log(dy);
-        TransferHelper.safeTransfer(tokens[j], msg.sender,dy);
-    }
-
-    function test_balancer(
-        uint256 i ,
-        uint256 j,
-        uint256 dx
-    ) external {
-        TransferHelper.safeTransferFrom(
-            tokens[i],
-            msg.sender,
-            address(this),
-            dx
-        );
-        approveAMM(i, dx, 5);
-        uint256 dy = _swapBal(tokens[i], tokens[j], dx);
-        console.log(dy);
-        TransferHelper.safeTransfer(tokens[j], msg.sender, dy);
-    }
-
-
-    function test_curve(
-        uint256 i ,
-        uint256 j,
-        uint256 dx
-    ) external {
-        TransferHelper.safeTransferFrom(
-            tokens[i],
-            msg.sender,
-            address(this),
-            dx
-        );
-        approveAMM(i, dx, 5);
-        uint256 dy = _swapCrv(i, j, dx);
-        console.log(dy);
-        TransferHelper.safeTransfer(tokens[j], msg.sender, dy);
-    }
-
-    function test_swap(
-        address i ,
-        uint256 j,
-        uint256 dx
-    ) external {
-        TransferHelper.safeTransferFrom(
-            i,
-            msg.sender,
-            address(this),
-            dx
-        );
-        TransferHelper.safeApprove(i, address(uniV3), dx);
-        uint256 dy =  uniV3.exactInputSingle(
-                    ISwapRouter.ExactInputSingleParams(
-                        i,
-                        tokens[j],
-                        3000,
-                        address(this),
-                        block.timestamp,
-                        dx,
-                        0,
-                        0
-                    )
-                );
-        TransferHelper.safeTransfer(tokens[j], msg.sender, dy);
-    } */
-
-   
-
-  
    
 }

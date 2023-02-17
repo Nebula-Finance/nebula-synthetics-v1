@@ -1,7 +1,9 @@
-import { ethers } from "hardhat";
+import { ethers, upgrades } from "hardhat";
 import { expect } from "chai";
+
 import * as dotenv from "dotenv";
 import { ICurvePool, IERC20, IWETH, GenesisIndex } from "../typechain-types";
+
 import { any } from "hardhat/internal/core/params/argumentTypes";
 dotenv.config();
 
@@ -13,7 +15,7 @@ function fromEther(n: any) {
 }
 
 describe("NGI", function () {
-  let ngi: GenesisIndex,
+  let ngi: any,
     usdc: IERC20,
     weth: IERC20,
     wbtc: IERC20,
@@ -29,9 +31,15 @@ describe("NGI", function () {
     const WMATIC = "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270";
     const CRV = "0x3FCD5De6A9fC8A99995c406c77DDa3eD7E406f81";
     accounts = await ethers.getSigners();
+
     const NGI = await ethers.getContractFactory("GenesisIndex");
-    ngi = await NGI.deploy();
-    await ngi.deployed();
+    const DeployHelper = await ethers.getContractFactory("DeployHelper");
+    const deployHelper = await DeployHelper.deploy();
+    await deployHelper.deployed();
+    await deployHelper.deployNGI(accounts[1].address, accounts[0].address);
+    const proxyAddress = await deployHelper.proxyAddress();
+
+    ngi = await ethers.getContractAt("GenesisIndex", proxyAddress);
     usdc = await ethers.getContractAt("IERC20", USDC);
     weth = await ethers.getContractAt("IWETH", WETH);
     wbtc = await ethers.getContractAt("IERC20", WBTC);
@@ -74,7 +82,7 @@ describe("NGI", function () {
   // returns price of index in USD (18 decimals)
   describe("Price", () => {
     it("Should return correct virtual price", async () => {
-      const res : any = await ngi.getVirtualPrice();
+      const res: any = await ngi.getVirtualPrice();
       console.log(`${(res / 1e18).toString()} $ `);
     });
   });
@@ -83,7 +91,7 @@ describe("NGI", function () {
   describe("Deposit default : USDC", async () => {
     let usdcBalance: any;
     beforeEach(async () => {
-      await wmatic.deposit({ value: toEther(100)});
+      await wmatic.deposit({ value: toEther(100) });
       await wmatic.approve(ngi.address, toEther(100));
       await ngi.test_swap(wmatic.address, "0", toEther(100));
       usdcBalance = await usdc.balanceOf(accounts[0].address);
@@ -278,10 +286,10 @@ describe("NGI", function () {
 
     it("No optimization", async () => {
       ngiBalance = await ngi.balanceOf(accounts[0].address);
-      await ngi.withdrawUsdc(ngiBalance - 500, "0", accounts[0].address);
+      await ngi.withdrawUsdc(ngiBalance, "0", accounts[0].address);
       const usdcBalance: any = await usdc.balanceOf(accounts[0].address);
       console.log(
-        `${fromEther(ngiBalance - 500)} NGI => ${(
+        `${fromEther(ngiBalance)} NGI => ${(
           usdcBalance /
           10 ** 6
         ).toString()} USDC `
@@ -289,10 +297,10 @@ describe("NGI", function () {
     });
 
     it("Optimization 1", async () => {
-      await ngi.withdrawUsdc(ngiBalance - 500, "1", accounts[0].address);
+      await ngi.withdrawUsdc(ngiBalance, "1", accounts[0].address);
       const usdcBalance: any = await usdc.balanceOf(accounts[0].address);
       console.log(
-        `${fromEther(ngiBalance - 500)} NGI => ${(
+        `${fromEther(ngiBalance)} NGI => ${(
           usdcBalance /
           10 ** 6
         ).toString()} USDC `
@@ -300,10 +308,10 @@ describe("NGI", function () {
     });
 
     it("Optimization 2", async () => {
-      await ngi.withdrawUsdc(ngiBalance - 500, "2", accounts[0].address);
+      await ngi.withdrawUsdc(ngiBalance, "2", accounts[0].address);
       const usdcBalance: any = await usdc.balanceOf(accounts[0].address);
       console.log(
-        `${fromEther(ngiBalance - 500)} NGI => ${(
+        `${fromEther(ngiBalance)} NGI => ${(
           usdcBalance /
           10 ** 6
         ).toString()} USDC `
@@ -311,10 +319,10 @@ describe("NGI", function () {
     });
 
     it("Optimization 3", async () => {
-      await ngi.withdrawUsdc(ngiBalance - 500, "3", accounts[0].address);
+      await ngi.withdrawUsdc(ngiBalance, "3", accounts[0].address);
       const usdcBalance: any = await usdc.balanceOf(accounts[0].address);
       console.log(
-        `${fromEther(ngiBalance - 500)} NGI => ${(
+        `${fromEther(ngiBalance)} NGI => ${(
           usdcBalance /
           10 ** 6
         ).toString()} USDC `
@@ -322,10 +330,10 @@ describe("NGI", function () {
     });
 
     it("Optimization 4", async () => {
-      await ngi.withdrawUsdc(ngiBalance - 500, "4", accounts[0].address);
+      await ngi.withdrawUsdc(ngiBalance, "4", accounts[0].address);
       const usdcBalance: any = await usdc.balanceOf(accounts[0].address);
       console.log(
-        `${fromEther(ngiBalance - 500)} NGI => ${(
+        `${fromEther(ngiBalance)} NGI => ${(
           usdcBalance /
           10 ** 6
         ).toString()} USDC `
@@ -402,7 +410,6 @@ describe("NGI", function () {
         [6000, 3000, 700, 200, 100],
         [6000, 3000, 700, 200, 100],
         accounts[0].address
-
       );
       const ngiBalance: any = await ngi.balanceOf(accounts[0].address);
       console.log(
@@ -413,4 +420,34 @@ describe("NGI", function () {
     });
   });
 
+  // withdraw using the custom settings
+  describe("Withdraw custom ", async () => {
+    let ngiBalance: any;
+    beforeEach(async () => {
+      await wmatic.deposit({ value: toEther(100) });
+      await wmatic.approve(ngi.address, toEther(100));
+      await ngi.test_swap(wmatic.address, "0", toEther(100));
+      let usdcBalance: any = await usdc.balanceOf(accounts[0].address);
+      await usdc.approve(ngi.address, usdcBalance);
+      await ngi.deposit("0", usdcBalance, "0", accounts[0].address);
+
+      ngiBalance = await ngi.balanceOf(accounts[0].address);
+    });
+
+    it("Custom", async () => {
+      await ngi.withdrawUsdcCustom(
+        ngiBalance,
+        [6000, 3000, 700, 200, 100],
+        [6000, 3000, 700, 200, 100],
+        accounts[0].address
+      );
+      const usdcBalance: any = await usdc.balanceOf(accounts[0].address);
+      console.log(
+        `${fromEther(ngiBalance)} NGI => ${(
+          usdcBalance /
+          10 ** 6
+        ).toString()} USDC `
+      );
+    });
+  });
 });

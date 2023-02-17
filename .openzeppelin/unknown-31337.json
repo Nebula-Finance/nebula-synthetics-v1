@@ -1,0 +1,634 @@
+{
+  "manifestVersion": "3.2",
+  "admin": {
+    "address": "0x5A6fDc20B1C0dAA5a21aC904a4cA238e43DAf757",
+    "txHash": "0x6afb28cdea8f144e92df43296e99c4e703138032e953b2d604d2aa6866d78b3b"
+  },
+  "proxies": [
+    {
+      "address": "0x5c8065532AFfF0A784E42F9C56A3d6eDBF705301",
+      "txHash": "0xa17a85752bad7e722795ba68a07aa72010179be3b791a84cf1037c03d425aab6",
+      "kind": "transparent"
+    },
+    {
+      "address": "0x7dAa10F02933960de968Cdd884dBc20487672128",
+      "txHash": "0xea4522891a14031ddd048200d6ce3f5e0d35bf13cd077247cd5c17c5e3c6fc1a",
+      "kind": "transparent"
+    },
+    {
+      "address": "0xe0b5452DDB57d5bDd9F49470BAc24BAD879C68E0",
+      "txHash": "0x1008c3d9bdf91fff05850df6b4176f3afa8fa2e9384976f31cc8c44efacd8beb",
+      "kind": "transparent"
+    },
+    {
+      "address": "0xb0fA41E2DF531C26dBA0E16D514381A816Aa2554",
+      "txHash": "0xa7aa3c5a885b9734dd2102e135e96eb19ae378598564c3111e49d9a500450056",
+      "kind": "transparent"
+    },
+    {
+      "address": "0xb20F65c1D442ebcebce7C377ea47e480c0aB453C",
+      "txHash": "0xc2e8648333035bbe697d13632dacf8c3019ca464412db778ef009cecb7cd7661",
+      "kind": "transparent"
+    },
+    {
+      "address": "0x67130B50Be53849B2E3Bbd9B8263F66baD9A1a5c",
+      "txHash": "0xedeca1930963cbe739972d02595ac212b16f2a4c8519b9005e78c5627a148ff8",
+      "kind": "transparent"
+    },
+    {
+      "address": "0x1aaaD333A7d363a8576779B71BF589580cC9D82E",
+      "txHash": "0xfe51593f0f461b757a64815a364adfb3a1d6ea658bd7f48b18f0d068d3541da9",
+      "kind": "transparent"
+    },
+    {
+      "address": "0xC20654dB7F9483f10c91dc94924dC8F04F79bfd5",
+      "txHash": "0x422cc7380dcd12e9f9554b1e4984e9138bd439ebd426e8ea657f7a4372b31969",
+      "kind": "transparent"
+    },
+    {
+      "address": "0x0Db32f0b116773fDD78C2e1b5E6609CC502e6784",
+      "txHash": "0x0db8e163def4ee2a2ac30197ace11af1a9fb95af7be73313248da37c4ddd0f06",
+      "kind": "transparent"
+    },
+    {
+      "address": "0x0eb44B96bC23A6362d383eF04bE67501251cF227",
+      "txHash": "0x1fc57761f0916ae9f9d2cf259f7e2adfa54ec8fa483af7eff3eab488833f9024",
+      "kind": "transparent"
+    },
+    {
+      "address": "0xf3C8D517ba8462911Cc2b8cfedc5dDeC50DFCBd6",
+      "txHash": "0x0553c74bac4168fcb1d875bfa19ce9e2ff2803fe64c27d6ecb616026110f9db3",
+      "kind": "transparent"
+    }
+  ],
+  "impls": {
+    "a8914ba49288f74484fd8c8130367689382f593d693e04ef8ea59f44eca62fc9": {
+      "address": "0xaEDA30eC4368181EFa71Ea32fb57c673Ab930f8f",
+      "txHash": "0xa56eec212a6edca300912bc8448d033909d09648ee7335f9715c3f0035f2b51f",
+      "layout": {
+        "solcVersion": "0.8.7",
+        "storage": [
+          {
+            "label": "_initialized",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_uint8",
+            "contract": "Initializable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:62",
+            "retypedFrom": "bool"
+          },
+          {
+            "label": "_initializing",
+            "offset": 1,
+            "slot": "0",
+            "type": "t_bool",
+            "contract": "Initializable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:67"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_array(t_uint256)50_storage",
+            "contract": "ContextUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol:36"
+          },
+          {
+            "label": "_balances",
+            "offset": 0,
+            "slot": "51",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "ERC20Upgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol:37"
+          },
+          {
+            "label": "_allowances",
+            "offset": 0,
+            "slot": "52",
+            "type": "t_mapping(t_address,t_mapping(t_address,t_uint256))",
+            "contract": "ERC20Upgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol:39"
+          },
+          {
+            "label": "_totalSupply",
+            "offset": 0,
+            "slot": "53",
+            "type": "t_uint256",
+            "contract": "ERC20Upgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol:41"
+          },
+          {
+            "label": "_name",
+            "offset": 0,
+            "slot": "54",
+            "type": "t_string_storage",
+            "contract": "ERC20Upgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol:43"
+          },
+          {
+            "label": "_symbol",
+            "offset": 0,
+            "slot": "55",
+            "type": "t_string_storage",
+            "contract": "ERC20Upgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol:44"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "56",
+            "type": "t_array(t_uint256)45_storage",
+            "contract": "ERC20Upgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol:400"
+          },
+          {
+            "label": "_owner",
+            "offset": 0,
+            "slot": "101",
+            "type": "t_address",
+            "contract": "OwnableUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:22"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "102",
+            "type": "t_array(t_uint256)49_storage",
+            "contract": "OwnableUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:94"
+          },
+          {
+            "label": "_paused",
+            "offset": 0,
+            "slot": "151",
+            "type": "t_bool",
+            "contract": "PausableUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol:29"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "152",
+            "type": "t_array(t_uint256)49_storage",
+            "contract": "PausableUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol:116"
+          },
+          {
+            "label": "priceFeeds",
+            "offset": 0,
+            "slot": "201",
+            "type": "t_array(t_contract(AggregatorV3Interface)1592)3_storage",
+            "contract": "PriceConsumerNGI",
+            "src": "contracts/product/NGI/PriceConsumerNGI.sol:8"
+          },
+          {
+            "label": "tokens",
+            "offset": 0,
+            "slot": "204",
+            "type": "t_array(t_address)3_storage",
+            "contract": "NGISplitter",
+            "src": "contracts/product/NGI/NGISplitter.sol:15"
+          },
+          {
+            "label": "multipliers",
+            "offset": 0,
+            "slot": "207",
+            "type": "t_array(t_uint40)3_storage",
+            "contract": "NGISplitter",
+            "src": "contracts/product/NGI/NGISplitter.sol:16"
+          },
+          {
+            "label": "marketCapWeigth",
+            "offset": 0,
+            "slot": "208",
+            "type": "t_array(t_uint16)3_storage",
+            "contract": "NGISplitter",
+            "src": "contracts/product/NGI/NGISplitter.sol:17"
+          },
+          {
+            "label": "crv",
+            "offset": 0,
+            "slot": "209",
+            "type": "t_contract(ICurvePool)1617",
+            "contract": "NGISplitter",
+            "src": "contracts/product/NGI/NGISplitter.sol:18"
+          },
+          {
+            "label": "uniV3",
+            "offset": 0,
+            "slot": "210",
+            "type": "t_contract(ISwapRouter)1709",
+            "contract": "NGISplitter",
+            "src": "contracts/product/NGI/NGISplitter.sol:19"
+          },
+          {
+            "label": "quick",
+            "offset": 0,
+            "slot": "211",
+            "type": "t_contract(IUniswapV2Router02)1841",
+            "contract": "NGISplitter",
+            "src": "contracts/product/NGI/NGISplitter.sol:20"
+          },
+          {
+            "label": "sushi",
+            "offset": 0,
+            "slot": "212",
+            "type": "t_contract(IUniswapV2Router02)1841",
+            "contract": "NGISplitter",
+            "src": "contracts/product/NGI/NGISplitter.sol:21"
+          },
+          {
+            "label": "bal",
+            "offset": 0,
+            "slot": "213",
+            "type": "t_contract(IVaultBalancer)1889",
+            "contract": "NGISplitter",
+            "src": "contracts/product/NGI/NGISplitter.sol:22"
+          },
+          {
+            "label": "addressRouting",
+            "offset": 0,
+            "slot": "214",
+            "type": "t_array(t_address)5_storage",
+            "contract": "NGISplitter",
+            "src": "contracts/product/NGI/NGISplitter.sol:23"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_array(t_address)3_storage": {
+            "label": "address[3]",
+            "numberOfBytes": "96"
+          },
+          "t_array(t_address)5_storage": {
+            "label": "address[5]",
+            "numberOfBytes": "160"
+          },
+          "t_array(t_contract(AggregatorV3Interface)1592)3_storage": {
+            "label": "contract AggregatorV3Interface[3]",
+            "numberOfBytes": "96"
+          },
+          "t_array(t_uint16)3_storage": {
+            "label": "uint16[3]",
+            "numberOfBytes": "32"
+          },
+          "t_array(t_uint256)45_storage": {
+            "label": "uint256[45]",
+            "numberOfBytes": "1440"
+          },
+          "t_array(t_uint256)49_storage": {
+            "label": "uint256[49]",
+            "numberOfBytes": "1568"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]",
+            "numberOfBytes": "1600"
+          },
+          "t_array(t_uint40)3_storage": {
+            "label": "uint40[3]",
+            "numberOfBytes": "32"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_contract(AggregatorV3Interface)1592": {
+            "label": "contract AggregatorV3Interface",
+            "numberOfBytes": "20"
+          },
+          "t_contract(ICurvePool)1617": {
+            "label": "contract ICurvePool",
+            "numberOfBytes": "20"
+          },
+          "t_contract(ISwapRouter)1709": {
+            "label": "contract ISwapRouter",
+            "numberOfBytes": "20"
+          },
+          "t_contract(IUniswapV2Router02)1841": {
+            "label": "contract IUniswapV2Router02",
+            "numberOfBytes": "20"
+          },
+          "t_contract(IVaultBalancer)1889": {
+            "label": "contract IVaultBalancer",
+            "numberOfBytes": "20"
+          },
+          "t_mapping(t_address,t_mapping(t_address,t_uint256))": {
+            "label": "mapping(address => mapping(address => uint256))",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_uint256)": {
+            "label": "mapping(address => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_string_storage": {
+            "label": "string",
+            "numberOfBytes": "32"
+          },
+          "t_uint16": {
+            "label": "uint16",
+            "numberOfBytes": "2"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          },
+          "t_uint40": {
+            "label": "uint40",
+            "numberOfBytes": "5"
+          },
+          "t_uint8": {
+            "label": "uint8",
+            "numberOfBytes": "1"
+          }
+        }
+      }
+    },
+    "8d10feaa36144eabdfdfda36ab72774b07caceb93582e2dce6ef8943b781081d": {
+      "address": "0x64A11d414D66819e17e8Cbe6A37E7Fd90021C890",
+      "txHash": "0x48bb820fdbdceddbba33391fdeee9beeb091c6a4f1838ac7dcedb2645e3c3af9",
+      "layout": {
+        "solcVersion": "0.8.7",
+        "storage": [
+          {
+            "label": "_initialized",
+            "offset": 0,
+            "slot": "0",
+            "type": "t_uint8",
+            "contract": "Initializable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:62",
+            "retypedFrom": "bool"
+          },
+          {
+            "label": "_initializing",
+            "offset": 1,
+            "slot": "0",
+            "type": "t_bool",
+            "contract": "Initializable",
+            "src": "@openzeppelin/contracts-upgradeable/proxy/utils/Initializable.sol:67"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "1",
+            "type": "t_array(t_uint256)50_storage",
+            "contract": "ContextUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/utils/ContextUpgradeable.sol:36"
+          },
+          {
+            "label": "_balances",
+            "offset": 0,
+            "slot": "51",
+            "type": "t_mapping(t_address,t_uint256)",
+            "contract": "ERC20Upgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol:37"
+          },
+          {
+            "label": "_allowances",
+            "offset": 0,
+            "slot": "52",
+            "type": "t_mapping(t_address,t_mapping(t_address,t_uint256))",
+            "contract": "ERC20Upgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol:39"
+          },
+          {
+            "label": "_totalSupply",
+            "offset": 0,
+            "slot": "53",
+            "type": "t_uint256",
+            "contract": "ERC20Upgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol:41"
+          },
+          {
+            "label": "_name",
+            "offset": 0,
+            "slot": "54",
+            "type": "t_string_storage",
+            "contract": "ERC20Upgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol:43"
+          },
+          {
+            "label": "_symbol",
+            "offset": 0,
+            "slot": "55",
+            "type": "t_string_storage",
+            "contract": "ERC20Upgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol:44"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "56",
+            "type": "t_array(t_uint256)45_storage",
+            "contract": "ERC20Upgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/token/ERC20/ERC20Upgradeable.sol:400"
+          },
+          {
+            "label": "_owner",
+            "offset": 0,
+            "slot": "101",
+            "type": "t_address",
+            "contract": "OwnableUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:22"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "102",
+            "type": "t_array(t_uint256)49_storage",
+            "contract": "OwnableUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol:94"
+          },
+          {
+            "label": "_paused",
+            "offset": 0,
+            "slot": "151",
+            "type": "t_bool",
+            "contract": "PausableUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol:29"
+          },
+          {
+            "label": "__gap",
+            "offset": 0,
+            "slot": "152",
+            "type": "t_array(t_uint256)49_storage",
+            "contract": "PausableUpgradeable",
+            "src": "@openzeppelin/contracts-upgradeable/security/PausableUpgradeable.sol:116"
+          },
+          {
+            "label": "priceFeeds",
+            "offset": 0,
+            "slot": "201",
+            "type": "t_array(t_contract(AggregatorV3Interface)2557)3_storage",
+            "contract": "PriceConsumerNGI",
+            "src": "contracts/product/NGI/PriceConsumerNGI.sol:8"
+          },
+          {
+            "label": "tokens",
+            "offset": 0,
+            "slot": "204",
+            "type": "t_array(t_address)3_storage",
+            "contract": "NGISplitter",
+            "src": "contracts/product/NGI/NGISplitter.sol:15"
+          },
+          {
+            "label": "multipliers",
+            "offset": 0,
+            "slot": "207",
+            "type": "t_array(t_uint40)3_storage",
+            "contract": "NGISplitter",
+            "src": "contracts/product/NGI/NGISplitter.sol:16"
+          },
+          {
+            "label": "marketCapWeigth",
+            "offset": 0,
+            "slot": "208",
+            "type": "t_array(t_uint16)3_storage",
+            "contract": "NGISplitter",
+            "src": "contracts/product/NGI/NGISplitter.sol:17"
+          },
+          {
+            "label": "crv",
+            "offset": 0,
+            "slot": "209",
+            "type": "t_contract(ICurvePool)2582",
+            "contract": "NGISplitter",
+            "src": "contracts/product/NGI/NGISplitter.sol:18"
+          },
+          {
+            "label": "uniV3",
+            "offset": 0,
+            "slot": "210",
+            "type": "t_contract(ISwapRouter)2674",
+            "contract": "NGISplitter",
+            "src": "contracts/product/NGI/NGISplitter.sol:19"
+          },
+          {
+            "label": "quick",
+            "offset": 0,
+            "slot": "211",
+            "type": "t_contract(IUniswapV2Router02)2806",
+            "contract": "NGISplitter",
+            "src": "contracts/product/NGI/NGISplitter.sol:20"
+          },
+          {
+            "label": "sushi",
+            "offset": 0,
+            "slot": "212",
+            "type": "t_contract(IUniswapV2Router02)2806",
+            "contract": "NGISplitter",
+            "src": "contracts/product/NGI/NGISplitter.sol:21"
+          },
+          {
+            "label": "bal",
+            "offset": 0,
+            "slot": "213",
+            "type": "t_contract(IVaultBalancer)2854",
+            "contract": "NGISplitter",
+            "src": "contracts/product/NGI/NGISplitter.sol:22"
+          },
+          {
+            "label": "addressRouting",
+            "offset": 0,
+            "slot": "214",
+            "type": "t_array(t_address)5_storage",
+            "contract": "NGISplitter",
+            "src": "contracts/product/NGI/NGISplitter.sol:23"
+          }
+        ],
+        "types": {
+          "t_address": {
+            "label": "address",
+            "numberOfBytes": "20"
+          },
+          "t_array(t_address)3_storage": {
+            "label": "address[3]",
+            "numberOfBytes": "96"
+          },
+          "t_array(t_address)5_storage": {
+            "label": "address[5]",
+            "numberOfBytes": "160"
+          },
+          "t_array(t_contract(AggregatorV3Interface)2557)3_storage": {
+            "label": "contract AggregatorV3Interface[3]",
+            "numberOfBytes": "96"
+          },
+          "t_array(t_uint16)3_storage": {
+            "label": "uint16[3]",
+            "numberOfBytes": "32"
+          },
+          "t_array(t_uint256)45_storage": {
+            "label": "uint256[45]",
+            "numberOfBytes": "1440"
+          },
+          "t_array(t_uint256)49_storage": {
+            "label": "uint256[49]",
+            "numberOfBytes": "1568"
+          },
+          "t_array(t_uint256)50_storage": {
+            "label": "uint256[50]",
+            "numberOfBytes": "1600"
+          },
+          "t_array(t_uint40)3_storage": {
+            "label": "uint40[3]",
+            "numberOfBytes": "32"
+          },
+          "t_bool": {
+            "label": "bool",
+            "numberOfBytes": "1"
+          },
+          "t_contract(AggregatorV3Interface)2557": {
+            "label": "contract AggregatorV3Interface",
+            "numberOfBytes": "20"
+          },
+          "t_contract(ICurvePool)2582": {
+            "label": "contract ICurvePool",
+            "numberOfBytes": "20"
+          },
+          "t_contract(ISwapRouter)2674": {
+            "label": "contract ISwapRouter",
+            "numberOfBytes": "20"
+          },
+          "t_contract(IUniswapV2Router02)2806": {
+            "label": "contract IUniswapV2Router02",
+            "numberOfBytes": "20"
+          },
+          "t_contract(IVaultBalancer)2854": {
+            "label": "contract IVaultBalancer",
+            "numberOfBytes": "20"
+          },
+          "t_mapping(t_address,t_mapping(t_address,t_uint256))": {
+            "label": "mapping(address => mapping(address => uint256))",
+            "numberOfBytes": "32"
+          },
+          "t_mapping(t_address,t_uint256)": {
+            "label": "mapping(address => uint256)",
+            "numberOfBytes": "32"
+          },
+          "t_string_storage": {
+            "label": "string",
+            "numberOfBytes": "32"
+          },
+          "t_uint16": {
+            "label": "uint16",
+            "numberOfBytes": "2"
+          },
+          "t_uint256": {
+            "label": "uint256",
+            "numberOfBytes": "32"
+          },
+          "t_uint40": {
+            "label": "uint40",
+            "numberOfBytes": "5"
+          },
+          "t_uint8": {
+            "label": "uint8",
+            "numberOfBytes": "1"
+          }
+        }
+      }
+    }
+  }
+}
