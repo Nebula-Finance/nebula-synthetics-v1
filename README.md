@@ -1,5 +1,5 @@
 # Nebula Synthetics V1
-
+![logo-icon](https://avatars.githubusercontent.com/u/116947655?s=200&v=4)
 ## General concept
 
 Nebula aims to build 100% asset backed tokens, offering a very user-friendly experience. Here some of the advantages:
