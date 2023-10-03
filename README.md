@@ -1,34 +1,100 @@
-# Nebula Synthetics V1
-![logo-icon](https://avatars.githubusercontent.com/u/116947655?s=200&v=4)
-## General concept
+# Nebula Genesis Index (NGI) Solidity Contract
 
-Nebula aims to build 100% asset backed tokens, offering a very user-friendly experience. Here some of the advantages:
+![License](https://img.shields.io/badge/license-MIT-blue)
+[![Actions Status](https://github.com/yunwei37/blockchain-demo/workflows/CI/badge.svg)](https://github.com/yunwei37/blockchain-demo/actions)
 
-- Interesting token selections
-- Efficient operations to buy the assets with very low slippage
-- Group of tokens in one sigle token
-- Buy all the tokens in one transaction
+This repository contains the smart contract for Nebula Genesis Index (NGI), an ERC20 token designed for Arbitrum. NGI represents a redeemable crypto index composed of 74% ETH and 26% BTC. The contract enables the automatic purchase of the underlying assets using various DeFi protocols to optimize slippage, including Uniswap, Curve, Balancer, QuickSwap, and SushiSwap. Users can also customize how the input amount is split across these protocols to achieve minimal slippage.
 
-## NGI
+## Table of Contents
 
-The first token we created is Nebula Genesis Index, backed by 74% WBTC and 26% WETH. It will be available on Polygon.
+- [About NGI](#about-ngi)
+- [Getting Started](#getting-started)
+- [Usage](#usage)
+- [Special Permission Functions](#special-permission-functions)
+- [License](#license)
 
-### Protocols used:
+## About NGI
 
-- Curve
-- Uniswap V3
-- Quickswap
-- Sushiswap
-- Balancer
+### Contract Details
 
-### Price
+- **Name**: Nebula Genesis Index (NGI)
+- **Symbol**: NGI
 
-The virtual price of 1 NGI will be : WBTC price _ 0.74 + WETH price _ 0.26. The contract relays on Chainlink price feeds to fetch this data.
+### Composition
 
-### How it works
+NGI is composed of the following assets:
 
-User sends deposits WETH, WBTC or USDC in the contract, and the contract will use 74% of the amount to buy WTBC and 26% of the amount to buy WETH, then, NGI tokens will be minted to the user, which are 100% backed.
+- 74% Ethereum (ETH)
+- 26% Bitcoin (BTC)
 
-### Optimization
+### Features
 
-The user will be able to pick the optimization level needed for the operation. If the user wants to invest big amounts a hihgher optimization level will be needed in order to protect from slippage, splitting the order across this protocols. Our biggest bet is Curve's TRYCRIPTO pool, as it includes WETH, BTC and USDC and it has ridicolous slippage compared to other AMMs.
+- Mint NGI tokens by depositing USDC, automatically converting to ETH and BTC.
+- Customize the split of assets across different DeFi protocols to optimize slippage.
+- Burn NGI tokens to receive USDC.
+- Pause and unpause contract operations.
+
+## Getting Started
+
+To interact with the NGI contract, follow these steps:
+
+1. [Install an Arbitrum-compatible wallet](https://developer.offchainlabs.com/docs/public_testnet).
+
+2. Add the NGI contract address to your wallet.
+
+3. Deposit USDC into the contract to mint NGI tokens.
+
+4. Customize your asset split and optimize slippage if desired.
+
+5. Withdraw USDC by burning NGI tokens.
+
+## Usage
+
+### Minting NGI Tokens
+
+You can mint NGI tokens by depositing USDC. You have the option to customize your asset split and optimize slippage.
+
+#### Function: `deposit(uint8 tokenIn, uint256 amountIn, uint8 optimization, address recipient)`
+
+- `tokenIn`: The token to deposit (0 for USDC, 1 for wBTC, 2 for wETH).
+- `amountIn`: The amount of the token to deposit.
+- `optimization`: Level of slippage optimization (0 to 4).
+- `recipient`: Address to receive NGI tokens.
+
+### Burning NGI Tokens
+
+You can burn NGI tokens to receive USDC.
+
+#### Function: `withdrawUsdc(uint256 ngiIn, uint8 optimization, address recipient)`
+
+- `ngiIn`: The number of NGI tokens to burn.
+- `optimization`: Level of slippage optimization (0 to 4).
+- `recipient`: Address to receive USDC.
+
+### Customized Asset Split
+
+You can choose a custom asset split when depositing or withdrawing NGI tokens.
+
+#### Function: `depositCustom(uint8 tokenIn, uint256 amountIn, uint16[5] percentagesWBTCSplit, uint16[5] percentagesWETHSplit, address recipient)`
+
+- `tokenIn`: The token to deposit (0 for USDC, 1 for wBTC, 2 for wETH).
+- `amountIn`: The amount of the token to deposit.
+- `percentagesWBTCSplit`: Percentages of the token to exchange in each DEX to buy BTC.
+- `percentagesWETHSplit`: Percentages of the token to exchange in each DEX to buy ETH.
+- `recipient`: Address to receive NGI tokens.
+
+#### Function: `withdrawUsdcCustom(uint256 ngiIn, uint16[5] percentagesWBTCSplit, uint16[5] percentagesWETHSplit, address recipient)`
+
+- `ngiIn`: The number of NGI tokens to burn.
+- `percentagesWBTCSplit`: Percentages of the token to exchange in each DEX to buy BTC.
+- `percentagesWETHSplit`: Percentages of the token to exchange in each DEX to buy ETH.
+- `recipient`: Address to receive USDC.
+
+## Special Permission Functions
+
+- `pause()`: Pauses contract operations (onlyOwner).
+- `unpause()`: Unpauses contract operations (onlyOwner).
+
+## License
+
+This smart contract is licensed under the MIT License. See the [LICENSE](LICENSE) file for details.
